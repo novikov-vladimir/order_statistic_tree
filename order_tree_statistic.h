@@ -36,6 +36,7 @@ private:
 
     // -------------------------- tree_node helper functions -----------------
 
+    // fixes priorities if priority of v->l is larger than priority of v
     tree_node* rightRotate(tree_node* v) {
         tree_node *x = v->l;
 
@@ -45,6 +46,7 @@ private:
         return x;
     }
 
+    // fixes priorities if priority of v->r is larger than priority of v
     tree_node* leftRotate(tree_node* v) {
         tree_node *x = v->r;
 
@@ -54,6 +56,7 @@ private:
         return x;
     }
 
+    // splits the tree by given key with less comparator
     node_pair split(tree_node* v, _key value) {
         if (!v) return { nullptr, nullptr };
 
@@ -70,6 +73,7 @@ private:
         }
     }
 
+    // splits the tree by given key with less or equal comparator
     node_pair spliteq(tree_node* v, _key value) {
         if (!v) return { nullptr, nullptr };
 
@@ -101,7 +105,7 @@ private:
         }
     }
 
-    /* Recursive implementation of insertion in Treap */
+    // Recursive implementation of insertion in Treap using rotation
     tree_node* insert(tree_node* root, _key key) {
         if (!root) return (new tree_node(key));
 
@@ -141,6 +145,7 @@ private:
         return v;
     }
 
+    // returns pointer to previous element in set
     static tree_node* prev(tree_node* v, std::function<bool(_key, _key)> compare) {
         if (v->l) {
             v = v->l;
@@ -157,6 +162,7 @@ private:
         return v;
     }
 
+    // returns pointer to next element in set
     static tree_node* next(tree_node* v, std::function<bool(_key, _key)> compare) {
         if (v->r) {
             v = v->r;
@@ -173,17 +179,20 @@ private:
         return v;
     }
 
+    // returns pointer to the smallest element in set
     static tree_node* first(tree_node* v) {
         while (v->l) v = v->l;
         return v;
     }
 
+    // returns pointer to the largest element in set
     static tree_node* last(tree_node* v) {
         while (v->r) v = v->r;
         return v;
     }
 
-    void destruct_tree(tree_node* v) { // clears the tree
+    // clears the tree
+    void destruct_tree(tree_node* v) {
         if (v->l) destruct_tree(v->l);
         if (v->r) destruct_tree(v->r);
 
@@ -206,9 +215,9 @@ public:
         return compare;
     };
 
-    void swap(order_statistic_tree<_key> rt) { // probably this function should be rewritten
+    void swap(order_statistic_tree<_key> rt) {
         swap(root, rt->root);
-        swap(compare, rt->compare); //check if it works in O(1)
+        swap(compare, rt->compare);
     }
 
     void clear() {
