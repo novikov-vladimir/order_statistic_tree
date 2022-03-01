@@ -15,39 +15,43 @@ private:
 
         tree_node(_key k) {
             key = k;
-            prior = rand();
+            prior = rand(); // fix random
         }
 
         void update_node() {
-            size = 1 + ((l) ? l->size : 0) + ((r) ? r->size : 0);
+            size = 1;
 
-            if (l) l->par = this;
-            if (r) r->par = this;
+            if (l) {
+                l->par = this;
+                ++size;
+            }
+            if (r) {
+                r->par = this;
+                ++size;
+            }
         }
     };
 
-    typedef std::pair<tree_node*, tree_node*> node_pair;
+    using node_pair = std::pair<tree_node*, tree_node*>;
 
     // -------------------------- tree_node helper functions -----------------
 
-    tree_node* rightRotate(tree_node* y)
-    {
-        tree_node* x = y->l, * T2 = x->r;
+    tree_node* rightRotate(tree_node* v) {
+        tree_node *x = v->l;
 
-        x->r = y;
-        y->l = T2;
+        v->l = x->r;
+        x->r = v;
 
         return x;
     }
 
-    tree_node* leftRotate(tree_node* x)
-    {
-        tree_node* y = x->r, * T2 = y->l;
+    tree_node* leftRotate(tree_node* v) {
+        tree_node *x = v->r;
 
-        y->l = x;
-        x->r = T2;
+        v->r = x->l;
+        x->l = v;
 
-        return y;
+        return x;
     }
 
     node_pair split(tree_node* v, _key value) {
@@ -98,32 +102,21 @@ private:
     }
 
     /* Recursive implementation of insertion in Treap */
-    tree_node* insert(tree_node* root, _key key)
-    {
-        // If root is NULL, create a new node and return it
-        if (!root)
-            return (new tree_node(key));
+    tree_node* insert(tree_node* root, _key key) {
+        if (!root) return (new tree_node(key));
 
-        // If key is smaller than root
         if (key == root->key) return root;
-
-        if (compare(key, root->key))
-        {
-            // Insert in left subtree
+        if (compare(key, root->key)) {
             root->l = insert(root->l, key);
 
-            // Fix Heap property if it is violated
-            if (root->l->prior > root->prior)
-                root = rightRotate(root);
-        } else // If key is greater
-        {
-            // Insert in right subtree
+            if (root->l->prior > root->prior) root = rightRotate(root);
+        } else {
             root->r = insert(root->r, key);
 
-            // Fix Heap property if it is violated
-            if (root->r->prior > root->prior)
-                root = leftRotate(root);
+            if (root->r->prior > root->prior) root = leftRotate(root);
         }
+
+        root->update_node();
         return root;
     }
 
@@ -135,7 +128,7 @@ private:
         to node with the smallest value which exceed _key value.
     */
 
-    tree_node* find(tree_node* v, _key value) const { // the function
+    tree_node* find(tree_node* v, _key value) const {
         while (v->key != value) {
             if (compare(v->key, value)) {
                 if (!v->r) break;
@@ -148,7 +141,7 @@ private:
         return v;
     }
 
-    static tree_node* prev(tree_node* v) {
+    static tree_node* prev(tree_node* v, std::function<bool(_key, _key)> compare) {
         if (v->l) {
             v = v->l;
             while (v->r) v = v->r;
@@ -156,7 +149,7 @@ private:
         }
 
         _key value = v->key;
-        while (!(v->key < value)) { // fix this shit
+        while (!compare(v->key, value)) {
             if (!v->par) return 0;
             v = v->par;
         }
@@ -164,7 +157,7 @@ private:
         return v;
     }
 
-    static tree_node* next(tree_node* v) {
+    static tree_node* next(tree_node* v, std::function<bool(_key, _key)> compare) {
         if (v->r) {
             v = v->r;
             while (v->l) v = v->l;
@@ -172,7 +165,7 @@ private:
         }
 
         _key value = v->key;
-        while (!(value < v->key)) { // fix this shit
+        while (!compare(value, v->key)) {
             if (!v->par) return 0;
             v = v->par;
         }
@@ -234,21 +227,11 @@ public:
         root = insert(root, value);
     }
 
-    /*
-     void insert(_key value) {
-        if (contains(value)) return;
-
-        node_pair p = split(root, value);
-        tree_node* to_insert = new tree_node(value);
-        root = merge(merge(p.first, to_insert), p.second);
-    }
-     */
-
     template<bool isReversed>
     class BaseIterator {
     private:
-        tree_node* ptr;
-
+        tree_node *ptr;
+        order_statistic_tree *tree;
     public:
         BaseIterator(tree_node* ptr = nullptr) : ptr(ptr) {}
 
@@ -262,18 +245,18 @@ public:
 
         BaseIterator& operator++() {
             if (!isReversed)
-                ptr = next(ptr);
+                ptr = next(ptr, tree->compare);
             else
-                ptr = prev(ptr);
+                ptr = prev(ptr, tree->compare);
 
             return *this;
         }
 
         BaseIterator& operator--() {
             if (!isReversed)
-                ptr = prev(ptr);
+                ptr = prev(ptr, tree->compare);
             else
-                ptr = next(ptr);
+                ptr = next(ptr, tree->compare);
 
             return *this;
         }
@@ -290,13 +273,11 @@ public:
             return ans;
         }
 
-        template<bool isReversedOther>
-        bool operator == (const BaseIterator<isReversedOther>& other) {
+        bool operator == (const BaseIterator<isReversed>& other) {
             return ptr == other.getPtr();
         }
 
-        template<bool isReversedOther>
-        bool operator != (const BaseIterator<isReversedOther>& other) {
+        bool operator != (const BaseIterator<isReversed>& other) {
             return ptr != other.getPtr();
         }
 
