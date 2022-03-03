@@ -37,7 +37,7 @@ private:
 
     // -------------------------- tree_node helper functions -----------------
 
-    int size(tree_node* v) {
+    static int size(tree_node* v) {
         return v ? v->size : 0;
     }
     // fixes priorities if priority of v->l is larger than priority of v
@@ -150,7 +150,7 @@ private:
     }
 
     // returns index of value in set if value exists
-    int get_index(tree_node* v, _key value) const {
+    static int get_index(tree_node* v, _key value, std::function<bool(_key, _key)> compare)  {
         int ind = 0;
         while (v->key != value) {
             if (compare(v->key, value)) {
@@ -260,9 +260,19 @@ public:
     template<bool isReversed>
     class BaseIterator {
     private:
+        //using curT = std::conditional_t<isConst, const T, T>;
+        //using curTRef = std::conditional_t<isConst, const T&, T&>;
+        //using curTPtr = std::conditional_t<isConst, const T*, T*>;
+
         tree_node *ptr;
         order_statistic_tree *tree;
     public:
+        using iterator_category = std::random_access_iterator_tag;
+        using value_type = _key;
+        using reference = _key&;
+        using pointer = _key*;
+        using difference_type = std::ptrdiff_t;
+
         explicit BaseIterator(tree_node* ptr = nullptr) : ptr(ptr) {}
 
         template<bool isReversedOther>
@@ -272,6 +282,26 @@ public:
             ptr = other.ptr;
             return *this;
         }
+
+        BaseIterator& operator - (const BaseIterator& other) {
+            int lst = size();
+            if (ptr != 0) lst = get_index(tree->root, ptr->key, tree->compare);
+            int fst = size();
+            if (other.ptr != 0) fst = get_index(other.tree->root, other.ptr->key, other.tree->compare);
+
+            return lst - fst;
+        }
+
+        /*BaseIterator& operator+=(int add) {
+            int cur = size();
+            if (ptr != 0) cur = get_index(tree->root, ptr->key, tree->compare);
+            if (!isReversed)
+                ptr = next(ptr, tree->compare);
+            else
+                ptr = prev(ptr, tree->compare);
+
+            return *this;
+        }*/
 
         BaseIterator& operator++() {
             if (!isReversed)
