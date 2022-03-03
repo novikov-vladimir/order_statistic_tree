@@ -252,12 +252,14 @@ private:
 
     // returns pointer to the smallest element in set
     static tree_node* first(tree_node* v) {
+        if (!v) return 0;
         while (v->l) v = v->l;
         return v;
     }
 
     // returns pointer to the largest element in set
     static tree_node* last(tree_node* v) {
+        if (!v) return 0;
         while (v->r) v = v->r;
         return v;
     }
