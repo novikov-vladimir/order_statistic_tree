@@ -1,6 +1,7 @@
 #pragma once
 #include <random>
 #include <functional>
+#include <algorithm>
 
 template<typename _key>
 class order_statistic_tree {
@@ -36,6 +37,9 @@ private:
 
     // -------------------------- tree_node helper functions -----------------
 
+    int size(tree_node* v) {
+        return v ? v->size : 0;
+    }
     // fixes priorities if priority of v->l is larger than priority of v
     tree_node* rightRotate(tree_node* v) {
         tree_node *x = v->l;
@@ -145,6 +149,23 @@ private:
         return v;
     }
 
+    // returns index of value in set if value exists
+    int get_index(tree_node* v, _key value) const {
+        int ind = 0;
+        while (v->key != value) {
+            if (compare(v->key, value)) {
+                if (!v->r) break;
+                ind += size(v->l) + 1;
+                v = v->r;
+            } else {
+                if (!v->l) break;
+                v = v->l;
+            }
+        }
+
+        return ind;
+    }
+
     // returns pointer to previous element in set
     static tree_node* prev(tree_node* v, std::function<bool(_key, _key)> compare) {
         if (v->l) {
@@ -201,13 +222,13 @@ private:
 
     tree_node* root = nullptr;
 public:
-    order_statistic_tree(std::function<bool(_key, _key)> compare_ = std::less<_key>()) : compare(compare_) { }
+    explicit order_statistic_tree(std::function<bool(_key, _key)> compare_ = std::less<_key>()) : compare(compare_) { }
 
-    bool empty() const {
+    [[nodiscard]] bool empty() const {
         return (root == nullptr);
     }
 
-    int size() const {
+    [[nodiscard]] size_t size() const {
         return root ? root->get_size() : 0;
     }
 
@@ -242,10 +263,10 @@ public:
         tree_node *ptr;
         order_statistic_tree *tree;
     public:
-        BaseIterator(tree_node* ptr = nullptr) : ptr(ptr) {}
+        explicit BaseIterator(tree_node* ptr = nullptr) : ptr(ptr) {}
 
         template<bool isReversedOther>
-        BaseIterator(const BaseIterator<isReversedOther>& other) : ptr(other.getPtr()) {}
+        explicit BaseIterator(const BaseIterator<isReversedOther>& other) : ptr(other.getPtr()) {}
 
         BaseIterator& operator = (const BaseIterator& other) {
             ptr = other.ptr;
@@ -352,6 +373,25 @@ public:
         if (v != end() && (compare((*v), a) || (*v) == a)) {
             v++;
         }
+        return v;
+    }
+
+    const_iterator statistic(int k) {
+        if (k >= size()) return 0;
+        ++k;
+
+        tree_node* v = root;
+        while (k != 0) {
+            if (v->l->size + 1 < k) {
+                v = v->r;
+                k -= v->l->size + 1;
+            } else if (v->l->size + 1 == k) {
+                k = 0;
+            } else {
+                v = v->l;
+            }
+        }
+
         return v;
     }
 };
