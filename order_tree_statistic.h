@@ -24,11 +24,11 @@ private:
 
             if (l) {
                 l->par = this;
-                ++size;
+                size += l->size;
             }
             if (r) {
                 r->par = this;
-                ++size;
+                size += r->size;
             }
         }
     };
@@ -42,20 +42,24 @@ private:
     }
     // fixes priorities if priority of v->l is larger than priority of v
     tree_node* rightRotate(tree_node* v) {
-        tree_node *x = v->l;
+        tree_node* x = v->l;
 
         v->l = x->r;
         x->r = v;
+        v->update_node();
+        x->update_node();
 
         return x;
     }
 
     // fixes priorities if priority of v->r is larger than priority of v
     tree_node* leftRotate(tree_node* v) {
-        tree_node *x = v->r;
+        tree_node* x = v->r;
 
         v->r = x->l;
         x->l = v;
+        v->update_node();
+        x->update_node();
 
         return x;
     }
@@ -128,6 +132,52 @@ private:
         return root;
     }
 
+    /* Recursive implementation of Delete() */
+    /*
+    tree_node* deleteNode(tree_node* root, _key key)
+    {
+        if (!root) return root;
+
+        // IF KEYS IS NOT AT ROOT
+        if (key < root->key)
+            root->left = deleteNode(root->left, key);
+        else if (key > root->key)
+            root->right = deleteNode(root->right, key);
+
+            // IF KEY IS AT ROOT
+
+            // If left is NULL
+        else if (root->left == NULL)
+        {
+            TreapNode *temp = root->right;
+            delete(root);
+            root = temp; // Make right child as root
+        }
+
+            // If Right is NULL
+        else if (root->right == NULL)
+        {
+            TreapNode *temp = root->left;
+            delete(root);
+            root = temp; // Make left child as root
+        }
+
+            // If key is at root and both left and right are not NULL
+        else if (root->left->priority < root->right->priority)
+        {
+            root = leftRotate(root);
+            root->left = deleteNode(root->left, key);
+        }
+        else
+        {
+            root = rightRotate(root);
+            root->right = deleteNode(root->right, key);
+        }
+
+        return root;
+    }
+    */
+
 
     /*
         This template function returns the pointer to the node with value in it equal to _key value if it exists.
@@ -150,7 +200,7 @@ private:
     }
 
     // returns index of value in set if value exists
-    static int get_index(tree_node* v, _key value, std::function<bool(_key, _key)> compare)  {
+    static int get_index(tree_node* v, _key value, std::function<bool(_key, _key)> compare) {
         int ind = 0;
         while (v->key != value) {
             if (compare(v->key, value)) {
@@ -264,8 +314,8 @@ public:
         //using curTRef = std::conditional_t<isConst, const T&, T&>;
         //using curTPtr = std::conditional_t<isConst, const T*, T*>;
 
-        tree_node *ptr;
-        order_statistic_tree *tree;
+        tree_node* ptr;
+        const std::function<bool(_key, _key)> compare;
     public:
         using iterator_category = std::random_access_iterator_tag;
         using value_type = _key;
@@ -273,24 +323,24 @@ public:
         using pointer = _key*;
         using difference_type = std::ptrdiff_t;
 
-        explicit BaseIterator(tree_node* ptr = nullptr) : ptr(ptr) {}
+        explicit BaseIterator(tree_node* ptr, std::function<bool(_key, _key)> compare) : ptr(ptr), compare(compare) {}
 
         template<bool isReversedOther>
-        explicit BaseIterator(const BaseIterator<isReversedOther>& other) : ptr(other.getPtr()) {}
+        explicit BaseIterator(const BaseIterator<isReversedOther>& other) : ptr(other.getPtr()), compare(other.compare()) {}
 
         BaseIterator& operator = (const BaseIterator& other) {
             ptr = other.ptr;
             return *this;
         }
 
-        BaseIterator& operator - (const BaseIterator& other) {
+        /* BaseIterator& operator - (const BaseIterator& other) {
             int lst = size();
-            if (ptr != 0) lst = get_index(tree->root, ptr->key, tree->compare);
+            if (ptr != 0) lst = get_index(tree->root, ptr->key, compare);
             int fst = size();
-            if (other.ptr != 0) fst = get_index(other.tree->root, other.ptr->key, other.tree->compare);
+            if (other.ptr != 0) fst = get_index(other.tree->root, other.ptr->key, other.compare);
 
             return lst - fst;
-        }
+        } */
 
         /*BaseIterator& operator+=(int add) {
             int cur = size();
@@ -305,18 +355,18 @@ public:
 
         BaseIterator& operator++() {
             if (!isReversed)
-                ptr = next(ptr, tree->compare);
+                ptr = next(ptr, compare);
             else
-                ptr = prev(ptr, tree->compare);
+                ptr = prev(ptr, compare);
 
             return *this;
         }
 
         BaseIterator& operator--() {
             if (!isReversed)
-                ptr = prev(ptr, tree->compare);
+                ptr = prev(ptr, compare);
             else
-                ptr = next(ptr, tree->compare);
+                ptr = next(ptr, compare);
 
             return *this;
         }
@@ -354,19 +404,19 @@ public:
     using const_reverse_iterator = BaseIterator<true>;
 
     const_iterator begin() const {
-        return first(root);
+        return BaseIterator<0>(first(root), compare);
     }
 
     const_reverse_iterator rbegin() const {
-        return last(root);
-    }
-
-    const_reverse_iterator rend() const {
-        return 0;
+        return BaseIterator<1>(last(root), compare);
     }
 
     const_iterator end() const {
-        return 0;
+        return BaseIterator<0>(nullptr, compare);
+    }
+
+    const_reverse_iterator rend() const {
+        return BaseIterator<1>(nullptr, compare);
     }
 
     bool operator==(const order_statistic_tree& rhs) {
