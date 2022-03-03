@@ -117,7 +117,7 @@ private:
     tree_node* insert(tree_node* root, _key key) {
         if (!root) return (new tree_node(key));
 
-        if (key == root->key) return root;
+        if (!(compare(key, root->key) | compare(root->key, key))) return root;
         if (compare(key, root->key)) {
             root->l = insert(root->l, key);
 
@@ -187,7 +187,7 @@ private:
     */
 
     tree_node* find(tree_node* v, _key value) const {
-        while (v->key != value) {
+        while (compare(v->key, value) | compare(value, v->key)) {
             if (compare(v->key, value)) {
                 if (!v->r) break;
                 v = v->r;
@@ -443,7 +443,7 @@ public:
     }
 
     const_iterator lower_bound(_key a) {
-        const_iterator v = find(root, a);
+        const_iterator v = BaseIterator<0>(find(root, a), compare);
         if (v != end() && compare((*v), a)) {
             v++;
         }
@@ -451,8 +451,8 @@ public:
     }
 
     const_iterator upper_bound(_key a) {
-        const_iterator v = find(root, a);
-        if (v != end() && (compare((*v), a) || (*v) == a)) {
+        const_iterator v = BaseIterator<0>(find(root, a), compare);
+        if (v != end() && (!compare(a, *v))) {
             v++;
         }
         return v;
