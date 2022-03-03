@@ -1,0 +1,101 @@
+#include <iostream>
+#include <set>
+#include <iomanip>
+#include "order_statistic_tree.h"
+using namespace std;
+
+const long long K = 15;
+
+void result(string func, bool res, vector<pair<int, string>> failed) {
+    if (res) {
+        cout << func << " passed all tests.";
+    } else {
+        cout << func << " failed tests: ";
+        for (auto c : failed) {
+            cout << c.first << " - " << c.second;
+            if (c != failed.back()) {
+                cout << ", ";
+            } else {
+                cout << ".";
+            }
+        }
+    }
+    cout << "\n";
+}
+
+long long ext_rand() { return rand() * RAND_MAX + rand(); }
+
+void insert_test() {
+    vector<pair<int, string>> failed;
+    srand(1);
+
+    // test1
+    try {
+        set<int> st1;
+        order_statistic_tree<int> st2;
+
+        for (int i = 0; i < K; i++) {
+            int q = ext_rand() % K;
+            st1.insert(q);
+            st2.insert(q);
+        }
+
+        vector<int> vec1, vec2;
+        for (auto c : st1) vec1.push_back(c);
+        for (auto c : st2) vec2.push_back(c);
+
+        if (vec1.size() != vec2.size()) {
+            failed.push_back({ 1, "wa" });
+        } else {
+            bool f = 1;
+            for (int i = 0; i < vec2.size(); i++) {
+                if (vec1[i] != vec2[i]) f = 0;
+            }
+
+            if (!f) failed.push_back({ 1, "wa" });
+        }
+    }
+    catch (int code) {
+        failed.push_back({ 1, "re" });
+    }
+
+    try {
+        set<string> st1;
+        order_statistic_tree<string> st2;
+
+        for (int i = 0; i < K; i++) {
+            string ins;
+            for (int j = 0; j < rand() % 100 + 1; j++) {
+                ins.push_back(rand() % 26 + 'a');
+            }
+            st1.insert(ins);
+            st2.insert(ins);
+        }
+
+        vector<string> vec1, vec2;
+        for (const auto& c : st1) vec1.push_back(c);
+        for (auto c : st2) vec2.push_back(c);
+
+        if (vec1.size() != vec2.size()) {
+            failed.push_back({ 1, "wa" });
+        } else {
+            bool f = 1;
+            for (int i = 0; i < vec2.size(); i++) {
+                if (vec1[i] != vec2[i]) f = 0;
+            }
+
+            if (!f) failed.push_back({ 1, "wa" });
+        }
+    }
+    catch (int code) {
+        failed.push_back({ 1, "re" });
+    }
+
+    result(__func__, failed.empty(), failed);
+}
+
+int main() {
+    insert_test();
+
+    return 0;
+}
