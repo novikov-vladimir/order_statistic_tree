@@ -135,49 +135,6 @@ private:
         return root;
     }
 
-    /* Recursive implementation of Delete() */
-    tree_node* deleteNode(tree_node* root, _key key) {
-        if (!root) return root;
-
-        // IF KEYS IS NOT AT ROOT
-        if (key < root->key)
-            root->left = deleteNode(root->left, key);
-        else if (key > root->key)
-            root->right = deleteNode(root->right, key);
-
-        // IF KEY IS AT ROOT
-
-        // If left is NULL
-        else if (root->left == NULL)
-        {
-            tree_node* temp = root->right;
-            delete(root);
-            root = temp; // Make right child as root
-        }
-
-        // If Right is NULL
-        else if (root->right == NULL)
-        {
-            tree_node* temp = root->left;
-            delete(root);
-            root = temp; // Make left child as root
-        }
-
-        // If key is at root and both left and right are not NULL
-        else if (root->left->priority < root->right->priority)
-        {
-            root = leftRotate(root);
-            root->left = deleteNode(root->left, key);
-        } else
-        {
-            root = rightRotate(root);
-            root->right = deleteNode(root->right, key);
-        }
-
-        return root;
-    }
-
-
     /*
         This template function returns the pointer to the node with value in it equal to _key value if it exists.
         If such node does not exist then the function returns the pointer to node
@@ -212,7 +169,7 @@ private:
             }
         }
 
-        return ind;
+        return ind + size(v->l);
     }
 
     // returns pointer to previous element in set
@@ -365,25 +322,63 @@ public:
             return *this;
         }
 
-        BaseIterator& operator - (const BaseIterator& other) {
-            int lst = size();
-            if (ptr != 0) lst = get_index(this->tree->root, ptr->key, compare);
-            int fst = size();
-            if (other.ptr != 0) fst = get_index(other.tree->root, other.ptr->key, other.compare);
+        int operator - (const BaseIterator& other) {
+            tree_node* root = this->endnode->l;
+            int lst = root ? root->size : 0;
+            if (ptr != 0) lst = get_index(root, ptr->key, compare);
+            int fst = lst;
+            tree_node* root2 = other.endnode->l;
+            if (other.ptr != 0) fst = get_index(root2, other.ptr->key, other.compare);
 
             return lst - fst;
         }
 
-        /*BaseIterator& operator+=(int add) {
-            int cur = size();
-            if (ptr != 0) cur = get_index(tree->root, ptr->key, tree->compare);
-            if (!isReversed)
-                ptr = next(ptr, tree->compare);
-            else
-                ptr = prev(ptr, tree->compare);
+        BaseIterator& operator+=(int add) {
+            int cur = size(endnode->r);
+            if (ptr != 0) cur = get_index(endnode->r, ptr->key, compare);
+            
+            int nd = add + cur;
+            if (nd < 0 || nd >= size(endnode->r)) nd = size(endnode->r);
+
+            auto it = endnode->r;
+
+            ptr = stat(nd);
 
             return *this;
-        }*/
+        }
+
+        BaseIterator& operator-=(int add) {
+            int cur = size(endnode->r);
+            if (ptr != 0) cur = get_index(endnode->r, ptr->key, compare);
+
+            int nd = cur - add;
+            if (nd < 0 || nd >= size(endnode->r)) nd = size(endnode->r);
+
+            auto it = endnode->r;
+
+            ptr = stat(nd);
+
+            return *this;
+        }
+
+        tree_node* stat(int nd) {
+            if (nd >= size(endnode->r)) return endnode;
+            ++nd;
+
+            tree_node* v = endnode->r;
+            while (nd != 0) {
+                if (size(v->l) + 1 < nd) {
+                    nd -= size(v->l) + 1;
+                    v = v->r;
+                } else if (size(v->l) + 1 == nd) {
+                    nd = 0;
+                } else {
+                    v = v->l;
+                }
+            }
+
+            return v;
+        }
 
         BaseIterator& operator++() {
             if (ptr == endnode) {
@@ -517,7 +512,8 @@ public:
         return v;
     }
 
-    const_iterator statistic(int k) const {
+    const_iterator statistic(int k) {
+        BaseIterator<0>(endnode, endnode, compare);
         if (k >= size()) return end();
         ++k;
 
