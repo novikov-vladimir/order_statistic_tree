@@ -44,24 +44,12 @@ void iterating_with_increment_test() {
         vec3 = vec;
         sort(vec3.begin(), vec3.end());
         vec3.erase(unique(vec3.begin(), vec3.end()), vec3.end());
-        for (auto it = st2.end()--; ; it--) {
-            vec1.push_back(*it);
-            if (it == st2.begin()) break;
-        }
-        for (auto it = st2.end()--; ; --it) {
-            vec1.push_back(*it);
-            if (it == st2.begin()) break;
-        }
+        for (auto it = st2.begin(); it != st2.end(); it++) vec1.push_back(*it);
+        for (auto it = st2.begin(); it != st2.end(); ++it) vec4.push_back(*it);
         for (auto c : st2) vec2.push_back(c);
 
-        for (auto it = st2.rend()--; ; it--) {
-            vec5.push_back(*it);
-            if (it == st2.rbegin()) break;
-        }
-        for (auto it = st2.rend()--; ; --it) {
-            vec6.push_back(*it);
-            if (it == st2.rbegin()) break;
-        }
+        for (auto it = st2.rbegin(); it != st2.rend(); it++) vec5.push_back(*it);
+        for (auto it = st2.rbegin(); it != st2.rend(); ++it) vec6.push_back(*it);
         reverse(vec5.begin(), vec5.end());
         reverse(vec6.begin(), vec6.end());
 
@@ -95,12 +83,27 @@ void iterating_with_decrement_test() {
         vec3 = vec;
         sort(vec3.begin(), vec3.end());
         vec3.erase(unique(vec3.begin(), vec3.end()), vec3.end());
-        for (auto it = st2.begin(); it != st2.end(); it++) vec1.push_back(*it);
-        for (auto it = st2.begin(); it != st2.end(); ++it) vec4.push_back(*it);
+        for (auto it = (--st2.end()); ; it--) {
+            vec1.push_back(*it);
+            if (it == st2.begin()) break;
+        }
+        for (auto it = --st2.end(); ; --it) {
+            vec4.push_back(*it);
+            if (it == st2.begin()) break;
+        }
         for (auto c : st2) vec2.push_back(c);
 
-        for (auto it = st2.rbegin(); it != st2.rend(); it++) vec5.push_back(*it);
-        for (auto it = st2.rbegin(); it != st2.rend(); ++it) vec6.push_back(*it);
+        for (auto it = --st2.rend(); ; it--) {
+            vec5.push_back(*it);
+            if (it == st2.rbegin()) break;
+        }
+        for (auto it = --st2.rend(); ; --it) {
+            vec6.push_back(*it);
+            if (it == st2.rbegin()) break;
+        }
+        reverse(vec2.begin(), vec2.end());
+        reverse(vec3.begin(), vec3.end());
+
         reverse(vec5.begin(), vec5.end());
         reverse(vec6.begin(), vec6.end());
 
