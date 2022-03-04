@@ -19,6 +19,8 @@ private:
             prior = rand(); // fix random
         }
 
+        tree_node() {}
+
         void update_node() {
             size = 1;
 
@@ -148,7 +150,7 @@ private:
             // If left is NULL
         else if (root->left == NULL)
         {
-            tree_node *temp = root->right;
+            tree_node* temp = root->right;
             delete(root);
             root = temp; // Make right child as root
         }
@@ -156,7 +158,7 @@ private:
             // If Right is NULL
         else if (root->right == NULL)
         {
-            tree_node *temp = root->left;
+            tree_node* temp = root->left;
             delete(root);
             root = temp; // Make left child as root
         }
@@ -166,8 +168,7 @@ private:
         {
             root = leftRotate(root);
             root->left = deleteNode(root->left, key);
-        }
-        else
+        } else
         {
             root = rightRotate(root);
             root->right = deleteNode(root->right, key);
@@ -270,9 +271,19 @@ private:
         delete v;
     }
 
+    void upd_end() {
+        endnode->l = root;
+        endnode->r = root;
+    }
+
     tree_node* root = nullptr;
+    tree_node* endnode = nullptr;
 public:
-    explicit order_statistic_tree(std::function<bool(_key, _key)> compare_ = std::less<_key>()) : compare(compare_) { }
+    explicit order_statistic_tree(std::function<bool(_key, _key)> compare_ = std::less<_key>()) : compare(compare_) {
+        endnode = new tree_node();
+        endnode->l = root;
+        endnode->r = root;
+    }
 
     [[nodiscard]] bool empty() const {
         return (root == nullptr);
@@ -297,6 +308,7 @@ public:
         if (root) destruct_tree(root);
 
         root = nullptr;
+        upd_end();
     }
 
     bool contains(_key value) const {
@@ -307,6 +319,8 @@ public:
 
     void insert(_key value) {
         root = insert(root, value);
+
+        upd_end();
     }
 
     template<bool isReversed>
@@ -316,7 +330,7 @@ public:
         //using curTRef = std::conditional_t<isConst, const T&, T&>;
         //using curTPtr = std::conditional_t<isConst, const T*, T*>;
 
-        tree_node* ptr;
+        tree_node* ptr, * endnode;
         const std::function<bool(_key, _key)> compare;
     public:
         using iterator_category = std::random_access_iterator_tag;
@@ -325,10 +339,10 @@ public:
         using pointer = _key*;
         using difference_type = std::ptrdiff_t;
 
-        explicit BaseIterator(tree_node* ptr, std::function<bool(_key, _key)> compare) : ptr(ptr), compare(compare) {}
+        explicit BaseIterator(tree_node* ptr, tree_node* endnode, std::function<bool(_key, _key)> compare) : ptr(ptr), endnode(endnode), compare(compare) {}
 
         template<bool isReversedOther>
-        explicit BaseIterator(const BaseIterator<isReversedOther>& other) : ptr(other.getPtr()), compare(other.compare()) {}
+        explicit BaseIterator(const BaseIterator<isReversedOther>& other) : ptr(other.getPtr()), endnode(other.endnode), compare(other.compare()) {}
 
         BaseIterator& operator = (const BaseIterator& other) {
             ptr = other.ptr;
@@ -356,23 +370,42 @@ public:
         }*/
 
         BaseIterator& operator++() {
+            if (ptr == endnode) {
+                if (!isReversed) {
+                    ptr = first(ptr);
+                } else {
+                    ptr = last(ptr);
+                }
+
+                return *this;
+            }
             if (!isReversed)
                 ptr = next(ptr, compare);
             else
                 ptr = prev(ptr, compare);
+
+            if (ptr == 0) ptr = endnode;
 
             return *this;
         }
 
         BaseIterator& operator--() {
-            if (ptr == 0) {
-                if (!isReversed)
-                    ptr = last()
+            if (ptr == endnode) {
+                if (isReversed) {
+                    ptr = first(ptr);
+                } else {
+                    ptr = last(ptr);
+                }
+
+                return *this;
             }
+
             if (!isReversed)
                 ptr = prev(ptr, compare);
             else
                 ptr = next(ptr, compare);
+
+            if (ptr == 0) ptr = endnode;
 
             return *this;
         }
@@ -410,19 +443,19 @@ public:
     using const_reverse_iterator = BaseIterator<true>;
 
     const_iterator begin() const {
-        return BaseIterator<0>(first(root), compare);
+        return BaseIterator<0>(first(root), endnode, compare);
     }
 
     const_reverse_iterator rbegin() const {
-        return BaseIterator<1>(last(root), compare);
+        return BaseIterator<1>(last(root), endnode, compare);
     }
 
     const_iterator end() const {
-        return BaseIterator<0>(nullptr, compare);
+        return BaseIterator<0>(endnode, endnode, compare);
     }
 
     const_reverse_iterator rend() const {
-        return BaseIterator<1>(nullptr, compare);
+        return BaseIterator<1>(endnode, endnode, compare);
     }
 
     bool operator==(const order_statistic_tree& rhs) {
@@ -430,44 +463,46 @@ public:
     }
 
     const_iterator find(_key value) {
-        if (root == 0) return BaseIterator<0>(nullptr, compare);
+        if (root == 0) return end();
         tree_node* v = find(root, value);
-        if (!(compare(v->key, value) | compare(value, v->key))) return BaseIterator<0>(v, compare);
-        return BaseIterator<0>(nullptr, compare);
+        if (!(compare(v->key, value) | compare(value, v->key))) return BaseIterator<0>(v, endnode, compare);
+        return end();
     }
 
     void erase(_key a) {
         node_pair q = split(root, a);
         node_pair q2 = spliteq(q.second, a);
         root = merge(q.first, q2.second);
+
+        upd_end();
     }
 
     void erase(const const_iterator& a) {
         if (a.getPtr() == 0) {
             const std::string err = __func__;
-            throw std::invalid_argument(err +  + " received iterator to an empty node.");
+            throw std::invalid_argument(err + +" received iterator to an empty node.");
         }
         erase(a.getPtr()->key);
     }
 
-    const_iterator lower_bound(_key a) {
-        const_iterator v = BaseIterator<0>(find(root, a), compare);
+    const_iterator lower_bound(_key a) const {
+        const_iterator v = BaseIterator<0>(find(root, a), endnode, compare);
         if (v != end() && compare((*v), a)) {
             v++;
         }
         return v;
     }
 
-    const_iterator upper_bound(_key a) {
-        const_iterator v = BaseIterator<0>(find(root, a), compare);
+    const_iterator upper_bound(_key a) const {
+        const_iterator v = BaseIterator<0>(find(root, a), endnode, compare);
         if (v != end() && (!compare(a, *v))) {
             v++;
         }
         return v;
     }
 
-    const_iterator statistic(int k) {
-        if (k >= size()) return BaseIterator<0>(nullptr, compare);
+    const_iterator statistic(int k) const {
+        if (k >= size()) return end();
         ++k;
 
         tree_node* v = root;
@@ -482,6 +517,6 @@ public:
             }
         }
 
-        return BaseIterator<0>(v, compare);
+        return BaseIterator<0>(v, endnode, compare);
     }
 };
