@@ -22,6 +22,7 @@ private:
         void update_node() {
             size = 1;
 
+            par = 0;
             if (l) {
                 l->par = this;
                 size += l->size;
@@ -86,12 +87,12 @@ private:
         if (!v) return { nullptr, nullptr };
 
         if (!compare(value, v->key)) {
-            node_pair res = split(v->r, value);
+            node_pair res = spliteq(v->r, value);
             v->r = res.first;
             v->update_node();
             return { v, res.second };
         } else {
-            node_pair res = split(v->l, value);
+            node_pair res = spliteq(v->l, value);
             v->l = res.second;
             v->update_node();
             return { res.first, v };
@@ -133,7 +134,6 @@ private:
     }
 
     /* Recursive implementation of Delete() */
-    /*
     tree_node* deleteNode(tree_node* root, _key key)
     {
         if (!root) return root;
@@ -149,7 +149,7 @@ private:
             // If left is NULL
         else if (root->left == NULL)
         {
-            TreapNode *temp = root->right;
+            tree_node *temp = root->right;
             delete(root);
             root = temp; // Make right child as root
         }
@@ -157,7 +157,7 @@ private:
             // If Right is NULL
         else if (root->right == NULL)
         {
-            TreapNode *temp = root->left;
+            tree_node *temp = root->left;
             delete(root);
             root = temp; // Make left child as root
         }
@@ -176,7 +176,6 @@ private:
 
         return root;
     }
-    */
 
 
     /*
@@ -281,7 +280,7 @@ public:
     }
 
     [[nodiscard]] size_t size() const {
-        return root ? root->get_size() : 0;
+        return root ? root->size : 0;
     }
 
     std::function<bool(_key, _key)> key_comp() const {
@@ -302,7 +301,7 @@ public:
     bool contains(_key value) const {
         if (!root) return 0;
 
-        return find(root, value)->key == value;
+        return !(compare(find(root, value)->key, value) | compare(value, find(root, value)->key));
     }
 
     void insert(_key value) {
@@ -426,10 +425,10 @@ public:
     }
 
     const_iterator find(_key value) {
-        if (root == 0) return 0;
+        if (root == 0) return BaseIterator<0>(nullptr, compare);
         tree_node* v = find(root, value);
-        if (v->key == value) return v;
-        return 0;
+        if (!(compare(v->key, value) | compare(value, v->key))) return BaseIterator<0>(v, compare);
+        return BaseIterator<0>(nullptr, compare);
     }
 
     void erase(_key a) {
@@ -438,8 +437,8 @@ public:
         root = merge(q.first, q2.second);
     }
 
-    void erase(const_iterator a) {
-        erase(a->ptr->key);
+    void erase(const const_iterator& a) {
+        erase(a.getPtr()->key);
     }
 
     const_iterator lower_bound(_key a) {
@@ -459,21 +458,21 @@ public:
     }
 
     const_iterator statistic(int k) {
-        if (k >= size()) return 0;
+        if (k >= size()) return BaseIterator<0>(nullptr, compare);
         ++k;
 
         tree_node* v = root;
         while (k != 0) {
-            if (v->l->size + 1 < k) {
+            if (size(v->l) + 1 < k) {
+                k -= size(v->l) + 1;
                 v = v->r;
-                k -= v->l->size + 1;
-            } else if (v->l->size + 1 == k) {
+            } else if (size(v->l) + 1 == k) {
                 k = 0;
             } else {
                 v = v->l;
             }
         }
 
-        return v;
+        return BaseIterator<0>(v, compare);
     }
 };
