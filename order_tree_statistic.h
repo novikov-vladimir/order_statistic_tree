@@ -134,8 +134,7 @@ private:
     }
 
     /* Recursive implementation of Delete() */
-    tree_node* deleteNode(tree_node* root, _key key)
-    {
+    tree_node* deleteNode(tree_node* root, _key key) {
         if (!root) return root;
 
         // IF KEYS IS NOT AT ROOT
@@ -286,10 +285,12 @@ public:
     std::function<bool(_key, _key)> key_comp() const {
         return compare;
     };
+    tree_node* get_root() const {
+        return root;
+    }
 
     void swap(order_statistic_tree<_key> rt) {
-        swap(root, rt->root);
-        swap(compare, rt->compare);
+        throw std::exception();
     }
 
     void clear() {
@@ -334,14 +335,14 @@ public:
             return *this;
         }
 
-        /* BaseIterator& operator - (const BaseIterator& other) {
+        BaseIterator& operator - (const BaseIterator& other) {
             int lst = size();
-            if (ptr != 0) lst = get_index(tree->root, ptr->key, compare);
+            if (ptr != 0) lst = get_index(this->tree->root, ptr->key, compare);
             int fst = size();
             if (other.ptr != 0) fst = get_index(other.tree->root, other.ptr->key, other.compare);
 
             return lst - fst;
-        } */
+        }
 
         /*BaseIterator& operator+=(int add) {
             int cur = size();
@@ -364,6 +365,10 @@ public:
         }
 
         BaseIterator& operator--() {
+            if (ptr == 0) {
+                if (!isReversed)
+                    ptr = last()
+            }
             if (!isReversed)
                 ptr = prev(ptr, compare);
             else
