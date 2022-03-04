@@ -438,6 +438,10 @@ public:
     }
 
     void erase(const const_iterator& a) {
+        if (a.getPtr() == 0) {
+            const std::string err = __func__;
+            throw std::invalid_argument(err +  + " received iterator to an empty node.");
+        }
         erase(a.getPtr()->key);
     }
 
