@@ -6,7 +6,7 @@
 template<typename _key>
 class order_statistic_tree {
 private:
-    const std::function<bool(_key, _key)> compare;
+    std::function<bool(_key, _key)> compare;
 
     class tree_node {
     public:
@@ -299,9 +299,25 @@ public:
     tree_node* get_root() const {
         return root;
     }
+    tree_node* get_end_node() const {
+        return endnode;
+    }
 
-    void swap(order_statistic_tree<_key> rt) {
-        throw std::exception();
+    void change_root(tree_node* rt) {
+        root = rt;
+    }
+
+    void change_end_node(tree_node* nd) {
+        endnode = nd;
+    }
+
+    void swap(order_statistic_tree<_key>& rt) {
+        tree_node* v = root;
+        tree_node* nd = endnode;
+
+        std::swap(root, rt.root);
+        std::swap(endnode, rt.endnode);
+        std::swap(compare, rt.compare);
     }
 
     void clear() {
