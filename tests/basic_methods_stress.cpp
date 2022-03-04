@@ -4,7 +4,7 @@
 #include "order_statistic_tree.h"
 using namespace std;
 
-const long long K = 150000, SQ = 1000;
+const long long K = 150000, SQ = 10000;
 
 void result(string func, bool res, vector<pair<int, string>> failed) {
     if (res) {
@@ -922,6 +922,94 @@ void erase_test() {
     result(__func__, failed.empty(), failed);
 }
 
+void clear_and_empty_test() {
+    vector<pair<int, string>> failed;
+    srand(1);
+
+    // test1
+    try {
+        order_statistic_tree<int> st2;
+
+        for (int i = 0; i < K2; i++) {
+            int q = ext_rand() % K2;
+            st2.insert(q);
+        }
+
+        vector<int> vec2;
+        for (int i = 0; i < K2; i++) {
+            for (int t = 0; t < rand() % 3; t++) {
+                int q = ext_rand() % K2;
+                st2.erase(q);
+            }
+        }
+
+        st2.clear();
+        for (auto c : st2) vec2.push_back(c);
+
+        if (!vec2.empty() || (!st2.empty())) failed.push_back({ 1, "wa" });
+    }
+    catch (int code) {
+        failed.push_back({ 1, "re" });
+    }
+
+    // test2
+    try {
+        vector<int> vec2;
+        order_statistic_tree<int> st2;
+
+        for (int i = 0; i < K2; i++) {
+            int q = ext_rand() % K2;
+            st2.insert(q);
+        }
+
+        st2.clear();
+        for (auto c : st2) vec2.push_back(c);
+
+        if (!vec2.empty() || !st2.empty()) failed.push_back({ 1, "wa" });
+    }
+    catch (int code) {
+        failed.push_back({ 1, "re" });
+    }
+
+    result(__func__, failed.empty(), failed);
+}
+
+void swap_test() {
+    vector<pair<int, string>> failed;
+    srand(1);
+
+    // test1
+    try {
+        order_statistic_tree<int> st1, st2;
+
+        for (int i = 0; i < K2; i++) {
+            int q = ext_rand() % K2;
+            st2.insert(q);
+        }
+
+        for (int i = 0; i < K2; i++) {
+            int q = ext_rand() % K2;
+            st1.insert(q);
+        }
+
+        vector<int> vec2, vec1, vec1swap, vec2swap;
+
+        for (auto c : st1) vec1.push_back(c);
+        for (auto c : st2) vec2.push_back(c);
+
+        st1.swap(st2);
+
+        for (auto c : st1) vec1swap.push_back(c);
+        for (auto c : st2) vec2swap.push_back(c);
+
+        if (vec1swap != vec2 || vec1 != vec2swap) failed.push_back({ 1, "wa" });
+    }
+    catch (int code) {
+        failed.push_back({ 1, "re" });
+    }
+
+    result(__func__, failed.empty(), failed);
+}
 
 int main() {
     insert_test();
@@ -930,6 +1018,8 @@ int main() {
     find_test();
     statistic_test();
     erase_test();
+    clear_and_empty_test();
+    swap_test();
 
     return 0;
 }
