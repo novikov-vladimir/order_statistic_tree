@@ -143,6 +143,7 @@ private:
     */
 
     tree_node* find(tree_node* v, _key value) const {
+        if (v == 0) return endnode;
         while (compare(v->key, value) | compare(value, v->key)) {
             if (compare(v->key, value)) {
                 if (!v->r) break;
@@ -336,7 +337,7 @@ public:
         BaseIterator& operator+=(int add) {
             int cur = size(endnode->r);
             if (ptr != 0) cur = get_index(endnode->r, ptr->key, compare);
-            
+
             int nd = add + cur;
             if (nd < 0 || nd >= size(endnode->r)) nd = size(endnode->r);
 
@@ -388,6 +389,7 @@ public:
                     ptr = last(ptr);
                 }
 
+                if (ptr == 0) ptr = endnode;
                 return *this;
             }
             if (!isReversed)
@@ -408,6 +410,7 @@ public:
                     ptr = last(ptr);
                 }
 
+                if (ptr == 0) ptr = endnode;
                 return *this;
             }
 
@@ -454,11 +457,11 @@ public:
     using const_reverse_iterator = BaseIterator<true>;
 
     const_iterator begin() const {
-        return BaseIterator<0>(root ? first(root) : endnode, endnode, compare);
+        return BaseIterator<0>((root ? first(root) : endnode), endnode, compare);
     }
 
     const_reverse_iterator rbegin() const {
-        return BaseIterator<1>(root ? last(root) : endnode, endnode, compare);
+        return BaseIterator<1>((root ? last(root) : endnode), endnode, compare);
     }
 
     const_iterator end() const {
