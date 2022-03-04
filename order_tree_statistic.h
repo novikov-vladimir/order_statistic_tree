@@ -145,9 +145,9 @@ private:
         else if (key > root->key)
             root->right = deleteNode(root->right, key);
 
-            // IF KEY IS AT ROOT
+        // IF KEY IS AT ROOT
 
-            // If left is NULL
+        // If left is NULL
         else if (root->left == NULL)
         {
             tree_node* temp = root->right;
@@ -155,7 +155,7 @@ private:
             root = temp; // Make right child as root
         }
 
-            // If Right is NULL
+        // If Right is NULL
         else if (root->right == NULL)
         {
             tree_node* temp = root->left;
@@ -163,7 +163,7 @@ private:
             root = temp; // Make left child as root
         }
 
-            // If key is at root and both left and right are not NULL
+        // If key is at root and both left and right are not NULL
         else if (root->left->priority < root->right->priority)
         {
             root = leftRotate(root);
@@ -443,11 +443,11 @@ public:
     using const_reverse_iterator = BaseIterator<true>;
 
     const_iterator begin() const {
-        return BaseIterator<0>(first(root), endnode, compare);
+        return BaseIterator<0>(root ? first(root) : endnode, endnode, compare);
     }
 
     const_reverse_iterator rbegin() const {
-        return BaseIterator<1>(last(root), endnode, compare);
+        return BaseIterator<1>(root ? last(root) : endnode, endnode, compare);
     }
 
     const_iterator end() const {
