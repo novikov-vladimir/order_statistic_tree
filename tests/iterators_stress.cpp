@@ -118,9 +118,154 @@ void iterating_with_decrement_test() {
     result(__func__, failed.empty(), failed);
 }
 
+void get_index_test() {
+    vector<pair<int, string>> failed;
+    srand(1);
+
+    // test1
+    try {
+        vector<int> vec;
+        order_statistic_tree<int> st2;
+
+        for (int i = 0; i < K; i++) {
+            int q = ext_rand() % K;
+            vec.push_back(q);
+            st2.insert(q);
+        }
+
+        sort(vec.begin(), vec.end());
+        vec.erase(unique(vec.begin(), vec.end()), vec.end());
+        vector<int> vec2, vec3;
+
+        for (int i = 0; i < K; i++) {
+            int q = ext_rand() % vec.size(), q2 = ext_rand() % vec.size();
+            vec2.push_back(q - q2);
+            vec3.push_back(st2.find(vec[q]) - st2.find(vec[q2]));
+        }
+
+        if (vec2 != vec3) {
+            failed.push_back({ 1, "wa" });
+        }
+    }
+    catch (int code) {
+        failed.push_back({ 1, "re" });
+    }
+
+    result(__func__, failed.empty(), failed);
+}
+
+void iterator_difference_test() {
+    vector<pair<int, string>> failed;
+    srand(1);
+
+    // test1
+    try {
+        vector<int> vec;
+        order_statistic_tree<int> st2;
+
+        for (int i = 0; i < K; i++) {
+            int q = ext_rand() % K;
+            vec.push_back(q);
+            st2.insert(q);
+        }
+
+        sort(vec.begin(), vec.end());
+        vec.erase(unique(vec.begin(), vec.end()), vec.end());
+        vector<int> vec2, vec3;
+
+        for (int i = 0; i < K; i++) {
+            int q = ext_rand() % vec.size(), q2 = ext_rand() % vec.size();
+            vec2.push_back(q - q2);
+            vec3.push_back(st2.find(vec[q]) - st2.find(vec[q2]));
+        }
+
+        if (vec2 != vec3) {
+            failed.push_back({ 1, "wa" });
+        }
+    }
+    catch (int code) {
+        failed.push_back({ 1, "re" });
+    }
+
+    result(__func__, failed.empty(), failed);
+}
+
+void iterator_random_access_test() {
+    vector<pair<int, string>> failed;
+    srand(1);
+
+    // test1
+    try {
+        vector<int> vec;
+        order_statistic_tree<int> st2;
+
+        for (int i = 0; i < K; i++) {
+            int q = ext_rand() % K;
+            vec.push_back(q);
+            st2.insert(q);
+        }
+
+        sort(vec.begin(), vec.end());
+        vec.erase(unique(vec.begin(), vec.end()), vec.end());
+        vector<int> vec2, vec3;
+
+        for (int i = 0; i < K; i++) {
+            int q = ext_rand() % vec.size(), q2 = ext_rand() % vec.size();
+            if (q > q2) swap(q, q2);
+            vec2.push_back(vec[q2]);
+            auto it = st2.find(vec[q]);
+            it += (q2 - q);
+            vec3.push_back(*it);
+        }
+
+        if (vec2 != vec3) {
+            failed.push_back({ 1, "wa" });
+        }
+    }
+    catch (int code) {
+        failed.push_back({ 1, "re" });
+    }
+
+    // test2
+    try {
+        vector<int> vec;
+        order_statistic_tree<int> st2;
+
+        for (int i = 0; i < K; i++) {
+            int q = ext_rand() % K;
+            vec.push_back(q);
+            st2.insert(q);
+        }
+
+        sort(vec.begin(), vec.end());
+        vec.erase(unique(vec.begin(), vec.end()), vec.end());
+        vector<int> vec2, vec3;
+
+        for (int i = 0; i < K; i++) {
+            int q = ext_rand() % vec.size(), q2 = ext_rand() % vec.size();
+            if (q > q2) swap(q, q2);
+            vec2.push_back(vec[q]);
+            auto it = st2.find(vec[q2]);
+            it -= (q2 - q);
+            vec3.push_back(*it);
+        }
+
+        if (vec2 != vec3) {
+            failed.push_back({ 2, "wa" });
+        }
+    }
+    catch (int code) {
+        failed.push_back({ 2, "re" });
+    }
+
+    result(__func__, failed.empty(), failed);
+}
+
 int main() {
     iterating_with_increment_test();
     iterating_with_decrement_test();
+    iterator_difference_test();
+    iterator_random_access_test();
 
     return 0;
 }
