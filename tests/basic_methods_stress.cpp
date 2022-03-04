@@ -4,7 +4,7 @@
 #include "order_statistic_tree.h"
 using namespace std;
 
-const long long K = 150000;
+const long long K = 150000, SQ = 1000;
 
 void result(string func, bool res, vector<pair<int, string>> failed) {
     if (res) {
@@ -277,8 +277,6 @@ void upper_and_lower_bound_test() {
             char t = rand() % 26 + 'a';
             int a = ext_rand() % K;
             int b = ext_rand() % K;
-            st1.insert({a, b, t});
-            st2.insert({a, b, t});
 
             mystruct str{1, 1, '4'};
             if (st1.lower_bound(str) != st1.end()) str = (*st1.lower_bound(str));
@@ -444,9 +442,494 @@ void upper_and_lower_bound_test() {
     result(__func__, failed.empty(), failed);
 }
 
+void contains_test() {
+    vector<pair<int, string>> failed;
+    srand(1);
+
+    // test1
+    try {
+        set<int> st1;
+        order_statistic_tree<int> st2;
+
+        for (int i = 0; i < K; i++) {
+            int q = ext_rand() % K;
+            st1.insert(q);
+            st2.insert(q);
+        }
+
+        const int MRG = 10;
+        vector<int> vec1, vec2;
+        for (int i = -MRG; i < K + MRG; i++) {
+            vec1.push_back((st1.find(i) != st1.end()));
+        }
+
+        for (int i = -MRG; i < K + MRG; i++) {
+            vec2.push_back(st2.contains(i));
+        }
+
+        if (vec1.size() != vec2.size()) {
+            failed.push_back({ 1, "wa" });
+        } else {
+            bool f = 1;
+            for (int i = 0; i < vec2.size(); i++) {
+                if (vec1[i] != vec2[i]) f = 0;
+            }
+
+            if (!f) failed.push_back({ 1, "wa" });
+        }
+    }
+    catch (int code) {
+        failed.push_back({ 1, "re" });
+    }
+
+    // test2
+    try {
+        set<string> st1;
+        order_statistic_tree<string> st2;
+
+        for (int i = 0; i < K; i++) {
+            string ins;
+            for (int j = 0; j < rand() % 7 + 1; j++) {
+                ins.push_back(rand() % 26 + 'a');
+            }
+            st1.insert(ins);
+            st2.insert(ins);
+        }
+
+        vector<bool> vec1, vec2;
+
+        for (int i = 0; i < K; i++) {
+            string ins;
+            for (int j = 0; j < rand() % 7 + 1; j++) {
+                ins.push_back(rand() % 26 + 'a');
+            }
+
+            vec1.push_back((st1.find(ins) != st1.end()));
+
+            vec2.push_back(st2.contains(ins));
+        }
+
+        if (vec1.size() != vec2.size()) {
+            failed.push_back({ 2, "wa" });
+        } else {
+            bool f = 1;
+            for (int i = 0; i < vec2.size(); i++) {
+                if (vec1[i] != vec2[i]) f = 0;
+            }
+
+            if (!f) failed.push_back({ 2, "wa" });
+        }
+    }
+    catch (int code) {
+        failed.push_back({ 2, "re" });
+    }
+
+    // test3
+    try {
+        struct mystruct {
+            int a, b;
+            char t;
+        };
+
+        auto compare = [](const mystruct& a, const mystruct& b)
+        {
+            return make_tuple(a.t, a.b, a.a) < make_tuple(b.t, b.b, b.a);
+        };
+
+        set<mystruct, decltype(compare)> st1(compare);
+        order_statistic_tree<mystruct> st2(compare);
+
+        vector<int> vec1, vec2;
+        for (int i = 0; i < K; i++) {
+            char t = rand() % 26 + 'a';
+            int a = ext_rand() % K;
+            int b = ext_rand() % K;
+            st1.insert({a, b, t});
+            st2.insert({a, b, t});
+        }
+
+        for (int i = 0; i < K; i++) {
+            char t = rand() % 26 + 'a';
+            int a = ext_rand() % K;
+            int b = ext_rand() % K;
+
+            vec1.push_back((st1.find({a, b, t}) != st1.end()));
+
+            vec2.push_back(st2.contains({a, b, t}));
+        }
+
+        if (vec1.size() != vec2.size()) {
+            failed.push_back({ 3, "wa" });
+        } else {
+            bool f = 1;
+            for (int i = 0; i < vec2.size(); i++) {
+                if (vec1[i] != vec2[i]) f = 0;
+            }
+
+            if (!f) failed.push_back({ 3, "wa" });
+        }
+    }
+    catch (int code) {
+        failed.push_back({ 3, "re" });
+    }
+
+    result(__func__, failed.empty(), failed);
+}
+
+void find_test() {
+    vector<pair<int, string>> failed;
+    srand(1);
+
+    // test1
+    try {
+        set<int> st1;
+        order_statistic_tree<int> st2;
+
+        for (int i = 0; i < K; i++) {
+            int q = ext_rand() % K;
+            st1.insert(q);
+            st2.insert(q);
+        }
+
+        const int MRG = 10;
+        vector<int> vec1, vec2;
+        for (int i = -MRG; i < K + MRG; i++) {
+            vec1.push_back((st1.find(i) != st1.end()));
+        }
+
+        for (int i = -MRG; i < K + MRG; i++) {
+            vec2.push_back(st2.find(i) != st2.end());
+        }
+
+        if (vec1.size() != vec2.size()) {
+            failed.push_back({ 1, "wa" });
+        } else {
+            bool f = 1;
+            for (int i = 0; i < vec2.size(); i++) {
+                if (vec1[i] != vec2[i]) f = 0;
+            }
+
+            if (!f) failed.push_back({ 1, "wa" });
+        }
+    }
+    catch (int code) {
+        failed.push_back({ 1, "re" });
+    }
+
+    // test2
+    try {
+        set<string> st1;
+        order_statistic_tree<string> st2;
+
+        for (int i = 0; i < K; i++) {
+            string ins;
+            for (int j = 0; j < rand() % 7 + 1; j++) {
+                ins.push_back(rand() % 26 + 'a');
+            }
+            st1.insert(ins);
+            st2.insert(ins);
+        }
+
+        vector<bool> vec1, vec2;
+
+        for (int i = 0; i < K; i++) {
+            string ins;
+            for (int j = 0; j < rand() % 7 + 1; j++) {
+                ins.push_back(rand() % 26 + 'a');
+            }
+
+            vec1.push_back((st1.find(ins) != st1.end()));
+
+            vec2.push_back(st2.find(ins) != st2.end());
+        }
+
+        if (vec1.size() != vec2.size()) {
+            failed.push_back({ 2, "wa" });
+        } else {
+            bool f = 1;
+            for (int i = 0; i < vec2.size(); i++) {
+                if (vec1[i] != vec2[i]) f = 0;
+            }
+
+            if (!f) failed.push_back({ 2, "wa" });
+        }
+    }
+    catch (int code) {
+        failed.push_back({ 2, "re" });
+    }
+
+    // test3
+    try {
+        struct mystruct {
+            int a, b;
+            char t;
+        };
+
+        auto compare = [](const mystruct& a, const mystruct& b)
+        {
+            return make_tuple(a.t, a.b, a.a) < make_tuple(b.t, b.b, b.a);
+        };
+
+        set<mystruct, decltype(compare)> st1(compare);
+        order_statistic_tree<mystruct> st2(compare);
+
+        vector<int> vec1, vec2;
+        for (int i = 0; i < K; i++) {
+            char t = rand() % 26 + 'a';
+            int a = ext_rand() % K;
+            int b = ext_rand() % K;
+            st1.insert({a, b, t});
+            st2.insert({a, b, t});
+        }
+
+        for (int i = 0; i < K; i++) {
+            char t = rand() % 26 + 'a';
+            int a = ext_rand() % K;
+            int b = ext_rand() % K;
+
+            vec1.push_back((st1.find({a, b, t}) != st1.end()));
+
+            vec2.push_back(st2.find({a, b, t}) != st2.end());
+        }
+
+        if (vec1.size() != vec2.size()) {
+            failed.push_back({ 3, "wa" });
+        } else {
+            bool f = 1;
+            for (int i = 0; i < vec2.size(); i++) {
+                if (vec1[i] != vec2[i]) f = 0;
+            }
+
+            if (!f) failed.push_back({ 3, "wa" });
+        }
+    }
+    catch (int code) {
+        failed.push_back({ 3, "re" });
+    }
+
+    result(__func__, failed.empty(), failed);
+}
+
+void statistic_test() {
+    vector<pair<int, string>> failed;
+    srand(1);
+
+    // test1
+    try {
+        vector<int> st1;
+        order_statistic_tree<int> st2;
+
+        for (int i = 0; i < K; i++) {
+            int q = ext_rand() % K;
+            st1.push_back(q);
+            st2.insert(q);
+        }
+
+        sort(st1.begin(), st1.end());
+        st1.erase(unique(st1.begin(), st1.end()), st1.end());
+        vector<int> vec1, vec2;
+
+        for (int i = 0; i < st1.size(); i++) {
+            vec1.push_back(st1[i]);
+            vec2.push_back((*st2.statistic(i)));
+        }
+
+        if (vec1.size() != vec2.size()) {
+            failed.push_back({ 1, "wa" });
+        } else {
+            bool f = 1;
+            for (int i = 0; i < vec2.size(); i++) {
+                if (vec1[i] != vec2[i]) f = 0;
+            }
+
+            if (!f) failed.push_back({ 1, "wa" });
+        }
+    }
+    catch (int code) {
+        failed.push_back({ 1, "re" });
+    }
+
+    // test2
+    try {
+        vector<string> st1;
+        order_statistic_tree<string> st2;
+
+        for (int i = 0; i < K; i++) {
+            string ins;
+            for (int j = 0; j < rand() % 7 + 1; j++) {
+                ins.push_back(rand() % 26 + 'a');
+            }
+            st1.push_back(ins);
+            st2.insert(ins);
+        }
+
+        sort(st1.begin(), st1.end());
+        st1.erase(unique(st1.begin(), st1.end()), st1.end());
+        vector<string> vec1, vec2;
+        for (int i = 0; i < st1.size(); i++) {
+            vec1.push_back(st1[i]);
+            vec2.push_back(*st2.statistic(i));
+        }
+
+        if (vec1.size() != vec2.size()) {
+            failed.push_back({ 2, "wa" });
+        } else {
+            bool f = 1;
+            for (int i = 0; i < vec2.size(); i++) {
+                if (vec1[i] != vec2[i]) f = 0;
+            }
+
+            if (!f) failed.push_back({ 2, "wa" });
+        }
+    }
+    catch (int code) {
+        failed.push_back({ 2, "re" });
+    }
+
+    // test3
+    try {
+        struct mystruct {
+            int a, b;
+            char t;
+
+            bool operator==(const mystruct& rhs) const {
+                return rhs.a == a && rhs.b == b && rhs.t == t;
+            }
+        };
+
+        auto compare = [](const mystruct& a, const mystruct& b)
+        {
+            return make_tuple(a.t, a.b, a.a) < make_tuple(b.t, b.b, b.a);
+        };
+
+        vector<mystruct> st1;
+        order_statistic_tree<mystruct> st2(compare);
+
+        for (int i = 0; i < K; i++) {
+            char t = rand() % 26 + 'a';
+            int a = ext_rand() % K;
+            int b = ext_rand() % K;
+            st1.push_back({a, b, t});
+            st2.insert({a, b, t});
+        }
+
+        sort(st1.begin(), st1.end(), compare);
+        st1.erase(unique(st1.begin(), st1.end()), st1.end());
+        vector<mystruct> vec1, vec2;
+        for (int i = 0; i < st1.size(); i++) {
+            vec1.push_back(st1[i]);
+            vec2.push_back(*st2.statistic(i));
+        }
+
+        if (vec1.size() != vec2.size()) {
+            failed.push_back({ 3, "wa" });
+        } else {
+            bool f = 1;
+            for (int i = 0; i < vec2.size(); i++) {
+                if (!(vec1[i] == vec2[i])) {
+                    f = 0;
+                }
+            }
+
+            if (!f) failed.push_back({ 3, "wa" });
+        }
+    }
+    catch (int code) {
+        failed.push_back({ 3, "re" });
+    }
+
+    result(__func__, failed.empty(), failed);
+}
+
+const int K2 = 1000;
+
+void erase_test() {
+    vector<pair<int, string>> failed;
+    srand(1);
+
+    // test1
+    try {
+        set<int> st1;
+        order_statistic_tree<int> st2;
+
+        for (int i = 0; i < K2; i++) {
+            int q = ext_rand() % K2;
+            st1.insert(q);
+            st2.insert(q);
+        }
+
+        vector<vector<int>> vec1, vec2;
+        for (int i = 0; i < K2; i++) {
+            for (int t = 0; t < rand() % 3; t++) {
+                int q = ext_rand() % K2;
+                st1.erase(q);
+                st2.erase(q);
+            }
+
+            vector<int> nw1, nw2;
+            for (auto c : st1) nw1.push_back(c);
+            for (auto c : st2) nw2.push_back(c);
+
+            vec1.push_back(nw1);
+            vec2.push_back(nw2);
+        }
+
+        bool f = 1;
+        if (vec1 != vec2) f = 0;
+
+        if (!f) failed.push_back({ 1, "wa" });
+    }
+    catch (int code) {
+        failed.push_back({ 1, "re" });
+    }
+
+    // test2
+    try {
+        set<int> st1;
+        order_statistic_tree<int> st2;
+
+        for (int i = 0; i < K2; i++) {
+            int q = ext_rand() % K2;
+            st1.insert(q);
+            st2.insert(q);
+        }
+
+        vector<vector<int>> vec1, vec2;
+        for (int i = 0; i < K2; i++) {
+            for (int t = 0; t < rand() % 3; t++) {
+                int q = ext_rand() % K2;
+                st1.erase(q);
+                if (st2.find(q) != st2.end()) st2.erase(st2.find(q));
+            }
+
+            vector<int> nw1, nw2;
+            for (auto c : st1) nw1.push_back(c);
+            for (auto c : st2) nw2.push_back(c);
+
+            vec1.push_back(nw1);
+            vec2.push_back(nw2);
+        }
+
+        bool f = 1;
+        if (vec1 != vec2) f = 0;
+
+        if (!f) failed.push_back({ 1, "wa" });
+    }
+    catch (int code) {
+        failed.push_back({ 1, "re" });
+    }
+
+    result(__func__, failed.empty(), failed);
+}
+
+
 int main() {
     insert_test();
     upper_and_lower_bound_test();
+    contains_test();
+    find_test();
+    statistic_test();
+    erase_test();
 
     return 0;
 }
