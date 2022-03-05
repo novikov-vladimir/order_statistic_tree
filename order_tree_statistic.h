@@ -16,11 +16,12 @@ private:
 
         tree_node(_key k) {
             key = k;
-            prior = rand(); // fix random
+            prior = rand();
         }
 
         tree_node() {}
 
+        // fixed sizes of current vertex and parents of adjacent vertices
         void update_node() {
             size = 1;
 
@@ -43,6 +44,7 @@ private:
     static int size(tree_node* v) {
         return v ? v->size : 0;
     }
+
     // fixes priorities if priority of v->l is larger than priority of v
     tree_node* rightRotate(tree_node* v) {
         tree_node* x = v->l;
@@ -101,6 +103,7 @@ private:
         }
     }
 
+    // merges two trees such that all keys in l are smaller than keys in r
     tree_node* merge(tree_node* l, tree_node* r) {
         if (!l) return r;
         if (!r) return l;
@@ -117,22 +120,22 @@ private:
     }
 
     // Recursive implementation of insertion in Treap using rotation
-    tree_node* insert(tree_node* root, _key key) {
+    tree_node* insert(tree_node* v, _key key) {
         if (!root) return (new tree_node(key));
 
-        if (!(compare(key, root->key) | compare(root->key, key))) return root;
-        if (compare(key, root->key)) {
-            root->l = insert(root->l, key);
+        if (!(compare(key, v->key) | compare(v->key, key))) return v;
+        if (compare(key, v->key)) {
+            v->l = insert(v->l, key);
 
-            if (root->l->prior > root->prior) root = rightRotate(root);
+            if (v->l->prior > v->prior) v = rightRotate(v);
         } else {
-            root->r = insert(root->r, key);
+            v->r = insert(v->r, key);
 
-            if (root->r->prior > root->prior) root = leftRotate(root);
+            if (v->r->prior > v->prior) v = leftRotate(v);
         }
 
-        root->update_node();
-        return root;
+        v->update_node();
+        return v;
     }
 
     /*
@@ -254,6 +257,7 @@ public:
     std::function<bool(_key, _key)> key_comp() const {
         return compare;
     };
+
     tree_node* get_root() const {
         return root;
     }
@@ -278,6 +282,7 @@ public:
         std::swap(compare, rt.compare);
     }
 
+    // clears the tree and used memory
     void clear() {
         if (root) destruct_tree(root);
 
@@ -285,6 +290,7 @@ public:
         upd_end();
     }
 
+    // checks whenever value is contained in the tree
     bool contains(_key value) const {
         if (!root) return 0;
 
@@ -300,9 +306,9 @@ public:
     template<bool isReversed>
     class BaseIterator {
     private:
-        //using curT = std::conditional_t<isConst, const T, T>;
-        //using curTRef = std::conditional_t<isConst, const T&, T&>;
-        //using curTPtr = std::conditional_t<isConst, const T*, T*>;
+        using curT = std::conditional_t<1, const T, T>;
+        using curTRef = std::conditional_t<1, const T&, T&>;
+        using curTPtr = std::conditional_t<1, const T*, T*>;
 
         tree_node* ptr, * endnode;
         const std::function<bool(_key, _key)> compare;
@@ -362,6 +368,7 @@ public:
             return *this;
         }
 
+        // ordered statistic implementation
         tree_node* stat(int nd) {
             if (nd >= size(endnode->r)) return endnode;
             ++nd;
@@ -515,6 +522,7 @@ public:
         return v;
     }
 
+    // ordered statistic implementation
     const_iterator statistic(int k) {
         BaseIterator<0>(endnode, endnode, compare);
         if (k >= size()) return end();
