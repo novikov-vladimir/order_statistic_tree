@@ -459,21 +459,23 @@ public:
 
     using const_iterator = BaseIterator<false>;
     using const_reverse_iterator = BaseIterator<true>;
+    using iterator = BaseIterator<0>;
+    using reverse_iterator = BaseIterator<1>;
 
     const_iterator begin() const {
-        return BaseIterator<0>((root ? first(root) : endnode), endnode, compare);
+        return iterator((root ? first(root) : endnode), endnode, compare);
     }
 
     const_reverse_iterator rbegin() const {
-        return BaseIterator<1>((root ? last(root) : endnode), endnode, compare);
+        return reverse_iterator((root ? last(root) : endnode), endnode, compare);
     }
 
     const_iterator end() const {
-        return BaseIterator<0>(endnode, endnode, compare);
+        return iterator(endnode, endnode, compare);
     }
 
     const_reverse_iterator rend() const {
-        return BaseIterator<1>(endnode, endnode, compare);
+        return reverse_iterator(endnode, endnode, compare);
     }
 
     bool operator==(const order_statistic_tree& rhs) {
@@ -483,7 +485,7 @@ public:
     const_iterator find(_key value) {
         if (root == 0) return end();
         tree_node* v = find(root, value);
-        if (!(compare(v->key, value) | compare(value, v->key))) return BaseIterator<0>(v, endnode, compare);
+        if (!(compare(v->key, value) | compare(value, v->key))) return iterator(v, endnode, compare);
         return end();
     }
 
@@ -504,7 +506,7 @@ public:
     }
 
     const_iterator lower_bound(_key a) const {
-        const_iterator v = BaseIterator<0>(find(root, a), endnode, compare);
+        const_iterator v = iterator(find(root, a), endnode, compare);
         if (v != end() && compare((*v), a)) {
             v++;
         }
@@ -512,7 +514,7 @@ public:
     }
 
     const_iterator upper_bound(_key a) const {
-        const_iterator v = BaseIterator<0>(find(root, a), endnode, compare);
+        const_iterator v = iterator(find(root, a), endnode, compare);
         if (v != end() && (!compare(a, *v))) {
             v++;
         }
@@ -521,7 +523,6 @@ public:
 
     // ordered statistic implementation
     const_iterator statistic(int k) {
-        BaseIterator<0>(endnode, endnode, compare);
         if (k >= size()) return end();
         ++k;
 
@@ -537,6 +538,6 @@ public:
             }
         }
 
-        return BaseIterator<0>(v, endnode, compare);
+        return iterator(v, endnode, compare);
     }
 };
