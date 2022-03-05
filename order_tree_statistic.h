@@ -121,7 +121,7 @@ private:
 
     // Recursive implementation of insertion in Treap using rotation
     tree_node* insert(tree_node* v, _key key) {
-        if (!root) return (new tree_node(key));
+        if (!v) return (new tree_node(key));
 
         if (!(compare(key, v->key) | compare(v->key, key))) return v;
         if (compare(key, v->key)) {
