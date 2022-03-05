@@ -338,6 +338,7 @@ public:
         }
 
         BaseIterator& operator+=(int add) {
+            if (isReversed) add = -add;
             int cur = size(endnode->r);
             if (ptr != 0) cur = get_index(endnode->r, ptr->key, compare);
 
@@ -351,7 +352,34 @@ public:
             return *this;
         }
 
+        BaseIterator& operator+(int add) {
+            if (isReversed) add = -add;
+            int cur = size(endnode->r);
+            if (ptr != 0) cur = get_index(endnode->r, ptr->key, compare);
+
+            int nd = add + cur;
+            if (nd < 0 || nd >= size(endnode->r)) nd = size(endnode->r);
+
+            auto it = endnode->r;
+
+            return BaseIterator<isReversed>(stat(nd), endnode, compare);
+        }
+
+        BaseIterator& operator-(int add) {
+            if (isReversed) add = -add;
+            int cur = size(endnode->r);
+            if (ptr != 0) cur = get_index(endnode->r, ptr->key, compare);
+
+            int nd = add + cur;
+            if (nd < 0 || nd >= size(endnode->r)) nd = size(endnode->r);
+
+            auto it = endnode->r;
+
+            return BaseIterator<isReversed>(stat(nd), endnode, compare);
+        }
+
         BaseIterator& operator-=(int add) {
+            if (isReversed) add = -add;
             int cur = size(endnode->r);
             if (ptr != 0) cur = get_index(endnode->r, ptr->key, compare);
 
@@ -364,6 +392,8 @@ public:
 
             return *this;
         }
+
+
 
         // ordered statistic implementation
         tree_node* stat(int nd) {
