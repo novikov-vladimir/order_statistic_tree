@@ -294,7 +294,8 @@ public:
     bool contains(_key value) const {
         if (!root) return 0;
 
-        return !(compare(find(root, value)->key, value) | compare(value, find(root, value)->key));
+        _key k = find(root, value)->key;
+        return !(compare(k, value) | compare(value, k));
     }
 
     void insert(_key value) {
