@@ -306,10 +306,6 @@ public:
     template<bool isReversed>
     class BaseIterator {
     private:
-        using curT = std::conditional_t<1, const T, T>;
-        using curTRef = std::conditional_t<1, const T&, T&>;
-        using curTPtr = std::conditional_t<1, const T*, T*>;
-
         tree_node* ptr, * endnode;
         const std::function<bool(_key, _key)> compare;
     public:
