@@ -570,4 +570,4 @@ public:
 
         return iterator(v, endnode, compare);
     }
-}
+};
