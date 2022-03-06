@@ -329,10 +329,10 @@ public:
         int operator - (const BaseIterator& other) {
             tree_node* root = this->endnode->l;
             int lst = root ? root->size : 0;
-            if (ptr != 0) lst = get_index(root, ptr->key, compare);
+            if (ptr != endnode) lst = get_index(root, ptr->key, compare);
             int fst = lst;
             tree_node* root2 = other.endnode->l;
-            if (other.ptr != 0) fst = get_index(root2, other.ptr->key, other.compare);
+            if (other.ptr != endnode) fst = get_index(root2, other.ptr->key, other.compare);
 
             return lst - fst;
         }
@@ -340,7 +340,7 @@ public:
         BaseIterator& operator+=(int add) {
             if (isReversed) add = -add;
             int cur = size(endnode->r);
-            if (ptr != 0) cur = get_index(endnode->r, ptr->key, compare);
+            if (ptr != endnode) cur = get_index(endnode->r, ptr->key, compare);
 
             int nd = add + cur;
             if (nd < 0 || nd >= size(endnode->r)) nd = size(endnode->r);
@@ -355,7 +355,7 @@ public:
         BaseIterator& operator+(int add) {
             if (isReversed) add = -add;
             int cur = size(endnode->r);
-            if (ptr != 0) cur = get_index(endnode->r, ptr->key, compare);
+            if (ptr != endnode) cur = get_index(endnode->r, ptr->key, compare);
 
             int nd = add + cur;
             if (nd < 0 || nd >= size(endnode->r)) nd = size(endnode->r);
@@ -368,7 +368,7 @@ public:
         BaseIterator& operator-(int add) {
             if (isReversed) add = -add;
             int cur = size(endnode->r);
-            if (ptr != 0) cur = get_index(endnode->r, ptr->key, compare);
+            if (ptr != endnode) cur = get_index(endnode->r, ptr->key, compare);
 
             int nd = add + cur;
             if (nd < 0 || nd >= size(endnode->r)) nd = size(endnode->r);
@@ -381,7 +381,7 @@ public:
         BaseIterator& operator-=(int add) {
             if (isReversed) add = -add;
             int cur = size(endnode->r);
-            if (ptr != 0) cur = get_index(endnode->r, ptr->key, compare);
+            if (ptr != endnode) cur = get_index(endnode->r, ptr->key, compare);
 
             int nd = cur - add;
             if (nd < 0 || nd >= size(endnode->r)) nd = size(endnode->r);
@@ -570,4 +570,3 @@ public:
 
         return iterator(v, endnode, compare);
     }
-};
