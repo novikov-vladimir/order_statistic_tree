@@ -41,7 +41,7 @@ private:
 
     // -------------------------- tree_node helper functions -----------------
 
-    static int size(tree_node* v) {
+    static size_t size(tree_node* v) {
         return v ? v->size : 0;
     }
 
