@@ -216,6 +216,11 @@ public:
         root = nullptr;
         upd_end();
     }
+    ~order_statistic_tree() {
+        clear();
+        delete root;
+        delete endnode;
+    }
 
     // checks whenever value is contained in the tree
     bool contains(_key value) const {
