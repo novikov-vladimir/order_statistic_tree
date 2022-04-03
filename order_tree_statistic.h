@@ -3,11 +3,9 @@
 #include <functional>
 #include <algorithm>
 
-template<typename _key>
+template<typename _key, class compare = std::less<_key>>
 class order_statistic_tree {
 private:
-    std::function<bool(_key, _key)> compare;
-
     class tree_node {
     public:
         _key key;
@@ -73,7 +71,7 @@ private:
     node_pair split(tree_node* v, _key value) {
         if (!v) return { nullptr, nullptr };
 
-        if (compare(v->key, value)) {
+        if (compare()(v->key, value)) {
             node_pair res = split(v->r, value);
             v->r = res.first;
             v->update_node();
@@ -90,7 +88,7 @@ private:
     node_pair spliteq(tree_node* v, _key value) {
         if (!v) return { nullptr, nullptr };
 
-        if (!compare(value, v->key)) {
+        if (!compare()(value, v->key)) {
             node_pair res = spliteq(v->r, value);
             v->r = res.first;
             v->update_node();
@@ -123,8 +121,8 @@ private:
     tree_node* insert(tree_node* v, _key key) {
         if (!v) return (new tree_node(key));
 
-        if (!(compare(key, v->key) | compare(v->key, key))) return v;
-        if (compare(key, v->key)) {
+        if (!(compare()(key, v->key) | compare()(v->key, key))) return v;
+        if (compare()(key, v->key)) {
             v->l = insert(v->l, key);
 
             if (v->l->prior > v->prior) v = rightRotate(v);
@@ -147,8 +145,8 @@ private:
 
     tree_node* find(tree_node* v, _key value) const {
         if (v == 0) return endnode;
-        while (compare(v->key, value) | compare(value, v->key)) {
-            if (compare(v->key, value)) {
+        while (compare()(v->key, value) | compare()(value, v->key)) {
+            if (compare()(v->key, value)) {
                 if (!v->r) break;
                 v = v->r;
             } else {
@@ -156,71 +154,6 @@ private:
                 v = v->l;
             }
         }
-        return v;
-    }
-
-    // returns index of value in set if value exists
-    static int get_index(tree_node* v, _key value, std::function<bool(_key, _key)> compare) {
-        int ind = 0;
-        while (v->key != value) {
-            if (compare(v->key, value)) {
-                if (!v->r) break;
-                ind += size(v->l) + 1;
-                v = v->r;
-            } else {
-                if (!v->l) break;
-                v = v->l;
-            }
-        }
-
-        return ind + size(v->l);
-    }
-
-    // returns pointer to previous element in set
-    static tree_node* prev(tree_node* v, std::function<bool(_key, _key)> compare) {
-        if (v->l) {
-            v = v->l;
-            while (v->r) v = v->r;
-            return v;
-        }
-
-        _key value = v->key;
-        while (!compare(v->key, value)) {
-            if (!v->par) return 0;
-            v = v->par;
-        }
-
-        return v;
-    }
-
-    // returns pointer to next element in set
-    static tree_node* next(tree_node* v, std::function<bool(_key, _key)> compare) {
-        if (v->r) {
-            v = v->r;
-            while (v->l) v = v->l;
-            return v;
-        }
-
-        _key value = v->key;
-        while (!compare(value, v->key)) {
-            if (!v->par) return 0;
-            v = v->par;
-        }
-
-        return v;
-    }
-
-    // returns pointer to the smallest element in set
-    static tree_node* first(tree_node* v) {
-        if (!v) return 0;
-        while (v->l) v = v->l;
-        return v;
-    }
-
-    // returns pointer to the largest element in set
-    static tree_node* last(tree_node* v) {
-        if (!v) return 0;
-        while (v->r) v = v->r;
         return v;
     }
 
@@ -240,7 +173,7 @@ private:
     tree_node* root = nullptr;
     tree_node* endnode = nullptr;
 public:
-    explicit order_statistic_tree(std::function<bool(_key, _key)> compare_ = std::less<_key>()) : compare(compare_) {
+    explicit order_statistic_tree() {
         endnode = new tree_node();
         endnode->l = root;
         endnode->r = root;
@@ -279,7 +212,6 @@ public:
 
         std::swap(root, rt.root);
         std::swap(endnode, rt.endnode);
-        std::swap(compare, rt.compare);
     }
 
     // clears the tree and used memory
@@ -295,7 +227,7 @@ public:
         if (!root) return 0;
 
         _key k = find(root, value)->key;
-        return !(compare(k, value) | compare(value, k));
+        return !(compare()(k, value) | compare()(value, k));
     }
 
     void insert(_key value) {
@@ -308,7 +240,6 @@ public:
     class BaseIterator {
     private:
         tree_node* ptr, * endnode;
-        const std::function<bool(_key, _key)> compare;
     public:
         using iterator_category = std::random_access_iterator_tag;
         using value_type = _key;
@@ -316,23 +247,81 @@ public:
         using pointer = _key*;
         using difference_type = std::ptrdiff_t;
 
-        explicit BaseIterator(tree_node* ptr, tree_node* endnode, std::function<bool(_key, _key)> compare) : ptr(ptr), endnode(endnode), compare(compare) {}
+        explicit BaseIterator(tree_node* ptr, tree_node* endnode) : ptr(ptr), endnode(endnode) {}
 
         template<bool isReversedOther>
-        explicit BaseIterator(const BaseIterator<isReversedOther>& other) : ptr(other.getPtr()), endnode(other.endnode), compare(other.compare()) {}
+        explicit BaseIterator(const BaseIterator<isReversedOther>& other) : ptr(other.getPtr()), endnode(other.endnode) {}
+
+        // returns index of value in set if value exists
+        int get_index(tree_node* v) {
+            if (v == endnode) return size(v->l);
+            int ind = size(v->l);
+            while (v->par) {
+                if (v->par->r == v) {
+                    ind += size(v->par->l) + 1;
+                }
+
+                v = v->par;
+            }
+
+            return ind;
+        }
+
+        tree_node* next(tree_node* v) {
+            if (v->r) {
+                v = v->r;
+                while (v->l) v = v->l;
+                return v;
+            }
+
+            tree_node* pr = v;
+            while (v->l != pr) {
+                if (!v->par) return 0;
+                pr = v;
+                v = v->par;
+            }
+
+            return v;
+        }
+
+        tree_node* prev(tree_node* v) {
+            if (v->l) {
+                v = v->l;
+                while (v->r) v = v->r;
+                return v;
+            }
+
+            tree_node* pr = v;
+            while (v->r != pr) {
+                if (!v->par) return 0;
+                pr = v;
+                v = v->par;
+            }
+
+            return v;
+        }
+
+        void descendLeft() {
+            while (ptr->l) ptr = ptr->l;
+        }
+
+        void descendRight() {
+            while (ptr->r) ptr = ptr->r;
+        }
 
         BaseIterator& operator = (const BaseIterator& other) {
             ptr = other.ptr;
+            endnode = other.endnode;
             return *this;
         }
 
         int operator - (const BaseIterator& other) {
             tree_node* root = this->endnode->l;
             int lst = root ? root->size : 0;
-            if (ptr != endnode) lst = get_index(root, ptr->key, compare);
+            if (ptr != endnode) lst = get_index(ptr);
             int fst = lst;
             tree_node* root2 = other.endnode->l;
-            if (other.ptr != endnode) fst = get_index(root2, other.ptr->key, other.compare);
+            if (other.ptr != endnode) fst = get_index(other.ptr);
 
             return lst - fst;
         }
@@ -340,7 +329,7 @@ public:
         BaseIterator& operator+=(int add) {
             if (isReversed) add = -add;
             int cur = size(endnode->r);
-            if (ptr != endnode) cur = get_index(endnode->r, ptr->key, compare);
+            if (ptr != endnode) cur = get_index(ptr);
 
             int nd = add + cur;
             if (nd < 0 || nd >= size(endnode->r)) nd = size(endnode->r);
@@ -355,7 +344,7 @@ public:
         BaseIterator& operator+(int add) {
             if (isReversed) add = -add;
             int cur = size(endnode->r);
-            if (ptr != endnode) cur = get_index(endnode->r, ptr->key, compare);
+            if (ptr != endnode) cur = get_index(ptr);
 
             int nd = add + cur;
             if (nd < 0 || nd >= size(endnode->r)) nd = size(endnode->r);
@@ -368,7 +357,7 @@ public:
         BaseIterator& operator-(int add) {
             if (isReversed) add = -add;
             int cur = size(endnode->r);
-            if (ptr != endnode) cur = get_index(endnode->r, ptr->key, compare);
+            if (ptr != endnode) cur = get_index(ptr);
 
             int nd = add + cur;
             if (nd < 0 || nd >= size(endnode->r)) nd = size(endnode->r);
@@ -381,7 +370,7 @@ public:
         BaseIterator& operator-=(int add) {
             if (isReversed) add = -add;
             int cur = size(endnode->r);
-            if (ptr != endnode) cur = get_index(endnode->r, ptr->key, compare);
+            if (ptr != endnode) cur = get_index(ptr);
 
             int nd = cur - add;
             if (nd < 0 || nd >= size(endnode->r)) nd = size(endnode->r);
@@ -393,7 +382,9 @@ public:
             return *this;
         }
 
-
+        void changePtr(tree_node* t) {
+            ptr = t;
+        }
 
         // ordered statistic implementation
         tree_node* stat(int nd) {
@@ -418,18 +409,18 @@ public:
         BaseIterator& operator++() {
             if (ptr == endnode) {
                 if (!isReversed) {
-                    ptr = first(ptr);
+                    descendLeft();
                 } else {
-                    ptr = last(ptr);
+                    descendRight();
                 }
 
                 if (ptr == 0) ptr = endnode;
                 return *this;
             }
             if (!isReversed)
-                ptr = next(ptr, compare);
+                ptr = next(ptr);
             else
-                ptr = prev(ptr, compare);
+                ptr = prev(ptr);
 
             if (ptr == 0) ptr = endnode;
 
@@ -439,9 +430,9 @@ public:
         BaseIterator& operator--() {
             if (ptr == endnode) {
                 if (isReversed) {
-                    ptr = first(ptr);
+                    descendLeft();
                 } else {
-                    ptr = last(ptr);
+                    descendRight();
                 }
 
                 if (ptr == 0) ptr = endnode;
@@ -449,9 +440,9 @@ public:
             }
 
             if (!isReversed)
-                ptr = prev(ptr, compare);
+                ptr = prev(ptr);
             else
-                ptr = next(ptr, compare);
+                ptr = next(ptr);
 
             if (ptr == 0) ptr = endnode;
 
@@ -492,20 +483,34 @@ public:
     using iterator = BaseIterator<0>;
     using reverse_iterator = BaseIterator<1>;
 
+    // returns pointer to the smallest element in set
+    tree_node* first(tree_node* v) const {
+        if (!v) return 0;
+        while (v->l) v = v->l;
+        return v;
+    }
+
+    // returns pointer to the largest element in set
+    tree_node* last(tree_node* v) const {
+        if (!v) return 0;
+        while (v->r) v = v->r;
+        return v;
+    }
+
     const_iterator begin() const {
-        return iterator((root ? first(root) : endnode), endnode, compare);
+        return iterator((root ? first(root) : endnode), endnode);
     }
 
     const_reverse_iterator rbegin() const {
-        return reverse_iterator((root ? last(root) : endnode), endnode, compare);
+        return reverse_iterator((root ? last(root) : endnode), endnode);
     }
 
     const_iterator end() const {
-        return iterator(endnode, endnode, compare);
+        return iterator(endnode, endnode);
     }
 
     const_reverse_iterator rend() const {
-        return reverse_iterator(endnode, endnode, compare);
+        return reverse_iterator(endnode, endnode);
     }
 
     bool operator==(const order_statistic_tree& rhs) {
@@ -515,7 +520,7 @@ public:
     const_iterator find(_key value) {
         if (root == 0) return end();
         tree_node* v = find(root, value);
-        if (!(compare(v->key, value) | compare(value, v->key))) return iterator(v, endnode, compare);
+        if (!(compare()(v->key, value) | compare()(value, v->key))) return iterator(v, endnode);
         return end();
     }
 
@@ -536,16 +541,16 @@ public:
     }
 
     const_iterator lower_bound(_key a) const {
-        const_iterator v = iterator(find(root, a), endnode, compare);
-        if (v != end() && compare((*v), a)) {
+        const_iterator v = iterator(find(root, a), endnode);
+        if (v != end() && compare()((*v), a)) {
             v++;
         }
         return v;
     }
 
     const_iterator upper_bound(_key a) const {
-        const_iterator v = iterator(find(root, a), endnode, compare);
-        if (v != end() && (!compare(a, *v))) {
+        const_iterator v = iterator(find(root, a), endnode);
+        if (v != end() && (!compare()(a, *v))) {
             v++;
         }
         return v;
@@ -554,20 +559,9 @@ public:
     // ordered statistic implementation
     const_iterator statistic(int k) {
         if (k >= size()) return end();
-        ++k;
 
-        tree_node* v = root;
-        while (k != 0) {
-            if (size(v->l) + 1 < k) {
-                k -= size(v->l) + 1;
-                v = v->r;
-            } else if (size(v->l) + 1 == k) {
-                k = 0;
-            } else {
-                v = v->l;
-            }
-        }
-
-        return iterator(v, endnode, compare);
+        const_iterator v = const_iterator(endnode, endnode);
+        v.changePtr(v.stat(k));
+        return v;
     }
 };
