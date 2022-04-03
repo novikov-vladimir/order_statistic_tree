@@ -187,10 +187,6 @@ public:
         return root ? root->size : 0;
     }
 
-    std::function<bool(_key, _key)> key_comp() const {
-        return compare;
-    };
-
     tree_node* get_root() const {
         return root;
     }
@@ -351,7 +347,7 @@ public:
 
             auto it = endnode->r;
 
-            return BaseIterator<isReversed>(stat(nd), endnode, compare);
+            return BaseIterator<isReversed>(stat(nd), endnode);
         }
 
         BaseIterator& operator-(int add) {
@@ -364,7 +360,7 @@ public:
 
             auto it = endnode->r;
 
-            return BaseIterator<isReversed>(stat(nd), endnode, compare);
+            return BaseIterator<isReversed>(stat(nd), endnode);
         }
 
         BaseIterator& operator-=(int add) {
