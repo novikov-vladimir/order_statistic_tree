@@ -121,7 +121,6 @@ private:
     tree_node* insert(tree_node* v, _key key) {
         if (!v) return (new tree_node(key));
 
-        if (!(compare()(key, v->key) | compare()(v->key, key))) return v;
         if (compare()(key, v->key)) {
             v->l = insert(v->l, key);
 
@@ -227,6 +226,7 @@ public:
     }
 
     void insert(_key value) {
+        if (contains(value)) return;
         root = insert(root, value);
 
         upd_end();
