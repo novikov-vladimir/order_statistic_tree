@@ -178,6 +178,55 @@ public:
         endnode->r = root;
     }
 
+    tree_node* copy(tree_node* u) {
+        if (!u) return 0;
+        tree_node* v = new tree_node();
+        v->key = u->key;
+        v->prior = u->prior;
+        v->size = u->size;
+        v->par = u->par;
+        v->l = copy(u->l);
+        v->r = copy(u->r);
+        return v;
+    }
+    order_statistic_tree(const order_statistic_tree<_key, compare>& rt) {
+        delete endnode;
+        endnode = new tree_node();
+        clear();
+        root = 0;
+        endnode->l = root;
+        endnode->r = root;
+
+        root = copy(rt.root);
+    }
+
+    void operator=(const order_statistic_tree<_key, compare>& rt) {
+        delete endnode;
+        endnode = new tree_node();
+        clear();
+        root = 0;
+        endnode->l = root;
+        endnode->r = root;
+
+        root = copy(rt.root);
+    }
+
+    order_statistic_tree(order_statistic_tree<_key, compare>&& rt) {
+        endnode = rt.endnode;
+        root = rt.root;
+
+        rt.root = 0;
+        rt.upd_end();
+    }
+
+    void operator=(const order_statistic_tree<_key, compare>&& rt) {
+        endnode = rt.endnode;
+        root = rt.root;
+
+        rt.root = 0;
+        rt.upd_end();
+    }
+
     [[nodiscard]] bool empty() const {
         return (root == nullptr);
     }
