@@ -303,7 +303,7 @@ public:
         explicit BaseIterator(const BaseIterator<isReversedOther>& other) : ptr(other.getPtr()), endnode(other.endnode) {}
 
         // returns index of value in set if value exists
-        int get_index(tree_node* v) {
+        int get_index(tree_node* v) const {
             if (v == endnode) return size(v->l);
             int ind = size(v->l);
             while (v->par) {
@@ -317,7 +317,7 @@ public:
             return ind;
         }
 
-        tree_node* next(tree_node* v) {
+        tree_node* next(tree_node* v) const {
             if (v->r) {
                 v = v->r;
                 while (v->l) v = v->l;
@@ -334,7 +334,7 @@ public:
             return v;
         }
 
-        tree_node* prev(tree_node* v) {
+        tree_node* prev(tree_node* v) const {
             if (v->l) {
                 v = v->l;
                 while (v->r) v = v->r;
@@ -365,7 +365,7 @@ public:
             return *this;
         }
 
-        int operator - (const BaseIterator& other) {
+        int operator - (const BaseIterator& other) const {
             tree_node* root = this->endnode->l;
             int lst = root ? root->size : 0;
             if (ptr != endnode) lst = get_index(ptr);
@@ -437,7 +437,7 @@ public:
         }
 
         // ordered statistic implementation
-        tree_node* stat(int nd) {
+        tree_node* stat(int nd) const {
             if (nd >= size(endnode->r)) return endnode;
             ++nd;
 
@@ -511,11 +511,11 @@ public:
             return ans;
         }
 
-        bool operator == (const BaseIterator<isReversed>& other) {
+        bool operator == (const BaseIterator<isReversed>& other) const {
             return ptr == other.getPtr();
         }
 
-        bool operator != (const BaseIterator<isReversed>& other) {
+        bool operator != (const BaseIterator<isReversed>& other) const {
             return ptr != other.getPtr();
         }
 
@@ -563,11 +563,11 @@ public:
         return reverse_iterator(endnode, endnode);
     }
 
-    bool operator==(const order_statistic_tree& rhs) {
+    bool operator==(const order_statistic_tree& rhs) const {
         return rhs.root = root;
     }
 
-    const_iterator find(_key value) {
+    const_iterator find(_key value) const {
         if (root == 0) return end();
         tree_node* v = find(root, value);
         if (!(compare()(v->key, value) | compare()(value, v->key))) return iterator(v, endnode);
@@ -607,7 +607,7 @@ public:
     }
 
     // ordered statistic implementation
-    const_iterator statistic(int k) {
+    const_iterator statistic(int k) const {
         if (k >= size()) return end();
 
         const_iterator v = const_iterator(endnode, endnode);
