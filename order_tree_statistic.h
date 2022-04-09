@@ -17,13 +17,18 @@ private:
             prior = rand();
         }
 
+        ~tree_node() {
+            if (l) delete l;
+            if (r) delete r;
+        }
+
         tree_node() {}
 
         // fixed sizes of current vertex and parents of adjacent vertices
         void update_node() {
             size = 1;
 
-            par = 0;
+            par = nullptr;
             if (l) {
                 l->par = this;
                 size += l->size;
@@ -143,7 +148,7 @@ private:
     */
 
     tree_node* find(tree_node* v, _key value) const {
-        if (v == 0) return endnode;
+        if (v == nullptr) return endnode;
         while (compare()(v->key, value) | compare()(value, v->key)) {
             if (compare()(v->key, value)) {
                 if (!v->r) break;
@@ -154,14 +159,6 @@ private:
             }
         }
         return v;
-    }
-
-    // clears the tree
-    void destruct_tree(tree_node* v) {
-        if (v->l) destruct_tree(v->l);
-        if (v->r) destruct_tree(v->r);
-
-        delete v;
     }
 
     void upd_end() {
@@ -179,52 +176,48 @@ public:
     }
 
     tree_node* copy(tree_node* u) {
-        if (!u) return 0;
-        tree_node* v = new tree_node();
-        v->key = u->key;
-        v->prior = u->prior;
-        v->size = u->size;
-        v->par = u->par;
-        v->l = copy(u->l);
-        v->r = copy(u->r);
+        if (!u) return nullptr;
+        tree_node* v = new tree_node(u);
         return v;
     }
     order_statistic_tree(const order_statistic_tree<_key, compare>& rt) {
         delete endnode;
         endnode = new tree_node();
         clear();
-        root = 0;
+        root = nullptr;
         endnode->l = root;
         endnode->r = root;
 
         root = copy(rt.root);
     }
 
-    void operator=(const order_statistic_tree<_key, compare>& rt) {
+    order_statistic_tree<_key, compare>& operator=(const order_statistic_tree<_key, compare>& rt) {
         delete endnode;
         endnode = new tree_node();
         clear();
-        root = 0;
+        root = nullptr;
         endnode->l = root;
         endnode->r = root;
 
         root = copy(rt.root);
+        return *this;
     }
 
     order_statistic_tree(order_statistic_tree<_key, compare>&& rt) {
         endnode = rt.endnode;
         root = rt.root;
 
-        rt.root = 0;
+        rt.root = nullptr;
         rt.upd_end();
     }
 
-    void operator=(const order_statistic_tree<_key, compare>&& rt) {
+    order_statistic_tree<_key, compare>& operator=(order_statistic_tree<_key, compare>&& rt) {
         endnode = rt.endnode;
         root = rt.root;
 
-        rt.root = 0;
+        rt.root = nullptr;
         rt.upd_end();
+        return *this;
     }
 
     [[nodiscard]] bool empty() const {
@@ -251,23 +244,22 @@ public:
     }
 
     void swap(order_statistic_tree<_key>& rt) {
-        tree_node* v = root;
-        tree_node* nd = endnode;
-
         std::swap(root, rt.root);
         std::swap(endnode, rt.endnode);
     }
 
     // clears the tree and used memory
     void clear() {
-        if (root) destruct_tree(root);
+        delete root;
 
         root = nullptr;
         upd_end();
     }
+
     ~order_statistic_tree() {
-        clear();
         delete root;
+        endnode->l = 0;
+        endnode->r = 0;
         delete endnode;
     }
 
@@ -326,7 +318,7 @@ public:
 
             tree_node* pr = v;
             while (v->l != pr) {
-                if (!v->par) return 0;
+                if (!v->par) return nullptr;
                 pr = v;
                 v = v->par;
             }
@@ -343,7 +335,7 @@ public:
 
             tree_node* pr = v;
             while (v->r != pr) {
-                if (!v->par) return 0;
+                if (!v->par) return nullptr;
                 pr = v;
                 v = v->par;
             }
@@ -464,7 +456,7 @@ public:
                     descendRight();
                 }
 
-                if (ptr == 0) ptr = endnode;
+                if (ptr == nullptr) ptr = endnode;
                 return *this;
             }
             if (!isReversed)
@@ -472,7 +464,7 @@ public:
             else
                 ptr = prev(ptr);
 
-            if (ptr == 0) ptr = endnode;
+            if (ptr == nullptr) ptr = endnode;
 
             return *this;
         }
@@ -485,7 +477,7 @@ public:
                     descendRight();
                 }
 
-                if (ptr == 0) ptr = endnode;
+                if (ptr == nullptr) ptr = endnode;
                 return *this;
             }
 
@@ -494,7 +486,7 @@ public:
             else
                 ptr = next(ptr);
 
-            if (ptr == 0) ptr = endnode;
+            if (ptr == nullptr) ptr = endnode;
 
             return *this;
         }
@@ -535,14 +527,14 @@ public:
 
     // returns pointer to the smallest element in set
     tree_node* first(tree_node* v) const {
-        if (!v) return 0;
+        if (!v) return nullptr;
         while (v->l) v = v->l;
         return v;
     }
 
     // returns pointer to the largest element in set
     tree_node* last(tree_node* v) const {
-        if (!v) return 0;
+        if (!v) return nullptr;
         while (v->r) v = v->r;
         return v;
     }
@@ -568,7 +560,7 @@ public:
     }
 
     const_iterator find(_key value) const {
-        if (root == 0) return end();
+        if (root == nullptr) return end();
         tree_node* v = find(root, value);
         if (!(compare()(v->key, value) | compare()(value, v->key))) return iterator(v, endnode);
         return end();
@@ -583,9 +575,9 @@ public:
     }
 
     void erase(const const_iterator& a) {
-        if (a.getPtr() == 0) {
+        if (a.getPtr() == nullptr) {
             const std::string err = __func__;
-            throw std::invalid_argument(err + +" received iterator to an empty node.");
+            throw std::invalid_argument(err + " received iterator to an empty node.");
         }
         erase(a.getPtr()->key);
     }
